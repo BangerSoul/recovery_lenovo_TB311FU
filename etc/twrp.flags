@@ -1,0 +1,30 @@
+# TWRP Extended Partition Flags for Lenovo Tab M11 (TB311FU / poplar)
+# <mount_point>   <fs_type>   <device_path>                         <flags>
+
+# Physical Firmware Partitions Flashable in GUI
+/boot             emmc        /dev/block/by-name/boot               flags=display="Boot";backup=1;flashimg=1;slotselect
+/init_boot        emmc        /dev/block/by-name/init_boot          flags=display="Init Boot";backup=1;flashimg=1;slotselect
+/vendor_boot      emmc        /dev/block/by-name/vendor_boot        flags=display="Vendor Boot";backup=1;flashimg=1;slotselect
+/dtbo             emmc        /dev/block/by-name/dtbo               flags=display="DTBO";backup=1;flashimg=1;slotselect
+/vbmeta           emmc        /dev/block/by-name/vbmeta             flags=display="VBMeta";backup=1;flashimg=1;slotselect
+/vbmeta_system    emmc        /dev/block/by-name/vbmeta_system      flags=display="VBMeta System";backup=1;flashimg=1;slotselect
+/vbmeta_vendor    emmc        /dev/block/by-name/vbmeta_vendor      flags=display="VBMeta Vendor";backup=1;flashimg=1;slotselect
+
+# 1-Click Disaster Recovery Atomic Backup Ecosystem
+# Grouped via subpartitionof=/nvram to ensure unified atomic backup/restore of calibration and security identifiers
+/nvram            emmc        /dev/block/by-name/nvram              flags=display="NVRAM";backup=1
+/nvdata           ext4        /dev/block/by-name/nvdata             flags=display="NVDATA";backup=1;subpartitionof=/nvram
+/nvcfg            ext4        /dev/block/by-name/nvcfg              flags=display="NVCFG";backup=1;subpartitionof=/nvram
+/protect_f        ext4        /dev/block/by-name/protect_f          flags=display="Protect F";backup=1;subpartitionof=/nvram
+/protect_s        ext4        /dev/block/by-name/protect_s          flags=display="Protect S";backup=1;subpartitionof=/nvram
+/proinfo          emmc        /dev/block/by-name/proinfo            flags=display="Proinfo";backup=1;subpartitionof=/nvram
+/seccfg           emmc        /dev/block/by-name/seccfg             flags=display="SecCfg";backup=1;subpartitionof=/nvram
+/persist          ext4        /dev/block/by-name/persist            flags=display="Persist (DRM/Sensors)";backup=1
+
+# Hardware Security & TEE Partitions
+/tee1             emmc        /dev/block/by-name/tee1               flags=display="TEE 1 (TrustZone)";backup=1
+/tee2             emmc        /dev/block/by-name/tee2               flags=display="TEE 2 (TrustZone)";backup=1
+
+# External Removable Storage
+/external_sd      auto        /dev/block/mmcblk1p1 /dev/block/mmcblk1 flags=display="MicroSD Card";storage;wipeingui;removable
+/usb_otg          auto        /dev/block/sda1 /dev/block/sda        flags=display="USB-OTG";storage;wipeingui;removable

@@ -1,0 +1,30 @@
+# Recovery System Properties for Lenovo Tab M11 (TB311FU / poplar)
+# Platform: MediaTek Helio G88 / MT6769 (MT8786, tb8786p1_64_k66)
+
+# Device & Product Identification
+ro.product.device=TB311FU
+ro.product.model=Lenovo Tab M11
+ro.product.name=TB311FU
+ro.build.product=poplar
+ro.product.board=tb8786p1_64_k66
+ro.board.platform=mt6768
+ro.product.manufacturer=Lenovo
+ro.product.brand=Lenovo
+
+# Display & MinUI UI Metrics (1920x1200 Landscape WUXGA)
+ro.sf.lcd_density=280
+ro.recovery.ui.margin_height=0
+ro.recovery.ui.margin_width=0
+
+# Dynamic Super Partitions & Userspace Fastbootd
+ro.boot.dynamic_partitions=true
+ro.fastbootd.available=true
+
+# USB Controller & Insecure ADB in Recovery
+ro.adb.secure=0
+sys.usb.controller=musb-hdrc
+
+# Cryptography & FBE v2 File Encryption Modes
+ro.crypto.volume.filenames_mode=aes-256-cts
+ro.crypto.allow_encrypt_override=true
+ro.crypto.volume.metadata.encryption=aes-256-xts:wrappedkey_v0

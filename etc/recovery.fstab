@@ -1,0 +1,30 @@
+# Android Recovery File System Table (fstab) for Lenovo Tab M11 (TB311FU / poplar)
+# <src>                                      <mnt_point>     <type>  <mnt_flags and options>                             <fs_mgr_flags>
+
+# Logical Dynamic Partitions in Super
+system                                       /system         ext4    ro                                                  wait,logical,first_stage_mount
+vendor                                       /vendor         ext4    ro                                                  wait,logical,first_stage_mount
+product                                      /product        ext4    ro                                                  wait,logical,first_stage_mount
+system_ext                                   /system_ext     ext4    ro                                                  wait,logical,first_stage_mount
+odm                                          /odm            ext4    ro                                                  wait,logical,first_stage_mount
+
+# Metadata Partition (FBE v2 Intermediate Key Storage)
+/dev/block/by-name/metadata                  /metadata       ext4    noatime,nosuid,nodev,discard                        wait,check,formattable
+
+# User Data Partition (F2FS with FBE v2 and Wrapped Key Metadata Encryption)
+/dev/block/by-name/userdata                  /data           f2fs    noatime,nosuid,nodev,discard,reserve_root=32768,resuid=1000 wait,check,formattable,quota,latemount,fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0,keydirectory=/metadata/vold/metadata_encryption
+
+# Core Direct Physical Boot & Firmware Partitions
+/dev/block/by-name/misc                      /misc           emmc    defaults                                            defaults
+/dev/block/by-name/boot                      /boot           emmc    defaults                                            defaults
+/dev/block/by-name/init_boot                 /init_boot      emmc    defaults                                            defaults
+/dev/block/by-name/vendor_boot               /vendor_boot    emmc    defaults                                            defaults
+/dev/block/by-name/dtbo                      /dtbo           emmc    defaults                                            defaults
+/dev/block/by-name/vbmeta                    /vbmeta         emmc    defaults                                            defaults
+/dev/block/by-name/vbmeta_system             /vbmeta_system  emmc    defaults                                            defaults
+/dev/block/by-name/vbmeta_vendor             /vbmeta_vendor  emmc    defaults                                            defaults
+
+# Critical Calibration & Persistent Storage Partitions
+/dev/block/by-name/nvram                     /nvram          emmc    defaults                                            defaults
+/dev/block/by-name/nvdata                    /nvdata         ext4    defaults                                            defaults
+/dev/block/by-name/persist                   /persist        ext4    defaults                                            defaults

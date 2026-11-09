@@ -1,0 +1,162 @@
+name: Build Custom Recovery (TWRP / OrangeFox)
+
+on:
+  workflow_dispatch:
+    inputs:
+      RECOVERY_FLAVOR:
+        description: 'Recovery flavor to compile:'
+        required: true
+        type: choice
+        default: 'TWRP'
+        options:
+          - 'TWRP'
+          - 'OrangeFox'
+      MANIFEST_BRANCH:
+        description: 'Recovery manifest branch:'
+        required: true
+        default: 'twrp-12.1'
+      BUILD_TARGET:
+        description: 'Make target:'
+        required: true
+        type: choice
+        default: 'vendorbootimage'
+        options:
+          - 'vendorbootimage'
+          - 'recoveryimage'
+      BUILD_TYPE:
+        description: 'Build variant:'
+        required: true
+        type: choice
+        default: 'eng'
+        options:
+          - 'eng'
+          - 'userdebug'
+
+jobs:
+  build:
+    name: Build Recovery for Lenovo TB311FU
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Maximize Runner Disk Space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo "=== Removing unused preinstalled packages ==="
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force >/dev/null 2>&1 || true
+          echo "=== Disk space after cleanup ==="
+          df -h
+
+      - name: Check out Device Recovery Tree
+        uses: actions/checkout@v4
+        with:
+          path: tb311fu_recovery_tree
+
+      - name: Set up Build Environment & Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            git-core gnupg flex bison build-essential zip curl zlib1g-dev \
+            libc6-dev-i386 libncurses5 x11proto-core-dev libx11-dev lib32z1-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 \
+            python3-pip rsync lz4 ccache bc cpio libssl-dev libelf-dev
+          
+          # Install Google repo CLI
+          sudo curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
+          sudo chmod a+x /usr/local/bin/repo
+
+          # Git identity
+          git config --global user.name "BangerSoul-CI"
+          git config --global user.email "ci@bangersoul.dev"
+          git config --global color.ui false
+
+      - name: Initialize Recovery Manifest
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/recovery_workspace"
+          cd "$GITHUB_WORKSPACE/recovery_workspace"
+
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
+          BRANCH="${{ inputs.MANIFEST_BRANCH }}"
+
+          if [ "$FLAVOR" = "OrangeFox" ]; then
+            echo "Initializing OrangeFox minimal manifest ($BRANCH)..."
+            repo init --depth=1 -u https://gitlab.com/OrangeFox/manifest.git -b "$BRANCH"
+          else
+            echo "Initializing TWRP minimal manifest ($BRANCH)..."
+            repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b "$BRANCH"
+          fi
+
+      - name: Sync Minimal Recovery Source
+        run: |
+          cd "$GITHUB_WORKSPACE/recovery_workspace"
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
+
+      - name: Link TB311FU Recovery Device Tree
+        run: |
+          TARGET_DIR="$GITHUB_WORKSPACE/recovery_workspace/device/lenovo/TB311FU"
+          mkdir -p "$TARGET_DIR"
+          rsync -av --exclude='.git' --exclude='.github' --exclude='tb311fu_recovery_tree' "$GITHUB_WORKSPACE/tb311fu_recovery_tree/" "$TARGET_DIR/"
+          echo "=== Device tree populated at $TARGET_DIR ==="
+          ls -la "$TARGET_DIR"
+
+      - name: Compile Custom Recovery Image
+        run: |
+          cd "$GITHUB_WORKSPACE/recovery_workspace"
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export LC_ALL="C"
+          source build/envsetup.sh
+
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
+          TYPE="${{ inputs.BUILD_TYPE }}"
+          TARGET="${{ inputs.BUILD_TARGET }}"
+
+          if [ "$FLAVOR" = "OrangeFox" ]; then
+            lunch "omni_TB311FU-${TYPE}"
+          else
+            lunch "twrp_TB311FU-${TYPE}"
+          fi
+
+          mka "$TARGET" -j$(nproc --all)
+
+      - name: Inspect & Package Output Artifacts
+        id: package
+        run: |
+          OUT_DIR="$GITHUB_WORKSPACE/recovery_workspace/out/target/product/TB311FU"
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+          if [ -f "$OUT_DIR/vendor_boot.img" ]; then
+            cp "$OUT_DIR/vendor_boot.img" "$GITHUB_WORKSPACE/artifacts/${FLAVOR}-TB311FU-vendor_boot-${TIMESTAMP}.img"
+          fi
+          if [ -f "$OUT_DIR/recovery.img" ]; then
+            cp "$OUT_DIR/recovery.img" "$GITHUB_WORKSPACE/artifacts/${FLAVOR}-TB311FU-recovery-${TIMESTAMP}.img"
+          fi
+
+          cd "$GITHUB_WORKSPACE/artifacts"
+          sha256sum * > SHA256SUMS.txt
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_OUTPUT
+          ls -la "$GITHUB_WORKSPACE/artifacts"
+
+      - name: Upload Run Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.RECOVERY_FLAVOR }}-TB311FU-${{ steps.package.outputs.TIMESTAMP }}
+          path: artifacts/*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: release-${{ steps.package.outputs.TIMESTAMP }}
+          name: "${{ inputs.RECOVERY_FLAVOR }} Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
+          draft: false
+          prerelease: false
+          files: artifacts/*

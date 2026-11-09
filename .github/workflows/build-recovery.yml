@@ -110,6 +110,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           export ALLOW_MISSING_DEPENDENCIES=true
           export LC_ALL="C"
+          export TWRP_ROOMSERVICE_DISABLED=true
           source build/envsetup.sh
 
           FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"

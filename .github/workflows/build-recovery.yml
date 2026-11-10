@@ -123,6 +123,11 @@ jobs:
             lunch "twrp_TB311FU-${TYPE}"
           fi
 
+          # Fix rsync root/vendor conflict in TWRP 12.1 recovery ramdisk packaging:
+          # out/target/product/TB311FU/root/vendor is a symlink, but recovery/root/vendor is a populated directory.
+          # Excluding vendor prevents rsync from failing when trying to overwrite the non-empty directory with a symlink.
+          grep -rl "rsync -a --exclude=sdcard" build/ 2>/dev/null | xargs -r sed -i 's/rsync -a --exclude=sdcard/rsync -a --exclude=vendor --exclude=\/root\/vendor --exclude=sdcard/g'
+
           mka "$TARGET" -j$(nproc --all)
 
       - name: Inspect & Package Output Artifacts

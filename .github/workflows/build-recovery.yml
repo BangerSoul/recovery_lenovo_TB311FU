@@ -128,6 +128,10 @@ jobs:
           # Excluding vendor prevents rsync from failing when trying to overwrite the non-empty directory with a symlink.
           grep -rl "rsync -a --exclude=sdcard" build/ 2>/dev/null | xargs -r sed -i 's/rsync -a --exclude=sdcard/rsync -a --exclude=vendor --exclude=\/root\/vendor --exclude=sdcard/g'
 
+          # Ensure prebuilt DTB is pre-staged in out directory for ninja dependency resolution
+          mkdir -p out/target/product/TB311FU
+          cp -f device/lenovo/TB311FU/prebuilt/dtb.img out/target/product/TB311FU/dtb.img || true
+
           mka "$TARGET" -j$(nproc --all)
 
       - name: Inspect & Package Output Artifacts

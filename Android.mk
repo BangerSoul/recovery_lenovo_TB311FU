@@ -51,4 +51,9 @@ LOCAL_SRC_FILES := system.prop
 LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)
 include $(BUILD_PREBUILT)
 
+# Prebuilt DTB image rule for Boot Header v4 vendor_boot packaging
+$(PRODUCT_OUT)/dtb.img: $(LOCAL_PATH)/prebuilt/dtb.img
+	$(hide) mkdir -p $(dir $@)
+	$(hide) cp -f $< $@
+
 endif

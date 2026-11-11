@@ -88,6 +88,16 @@ on post-fs
     chmod 0664 /sys/class/leds/lcd-backlight/brightness
     chown system system /sys/class/leds/lcd-backlight/brightness
 
+    # Haptic Vibrator Sysfs Nodes (MTK PMIC Vibrator)
+    chmod 0666 /sys/class/timed_output/vibrator/enable
+    chmod 0666 /sys/class/leds/vibrator/activate
+    chmod 0666 /sys/class/leds/vibrator/duration
+    chmod 0666 /sys/class/leds/vibrator/state
+    chown system system /sys/class/timed_output/vibrator/enable
+    chown system system /sys/class/leds/vibrator/activate
+    chown system system /sys/class/leds/vibrator/duration
+    chown system system /sys/class/leds/vibrator/state
+
     # Charging Subsystem & Fuel Gauge Sysfs Nodes (MT6358 PMIC / SGM41512 Charger)
     chmod 0664 /sys/class/power_supply/battery/capacity
     chmod 0664 /sys/class/power_supply/battery/status

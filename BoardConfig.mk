@@ -17,6 +17,7 @@
 
 # Device Path & Identification
 DEVICE_PATH := device/lenovo/TB311FU
+TW_DEVICE_VERSION := 12.1-BangerSoul
 
 # Architecture
 TARGET_ARCH := arm64

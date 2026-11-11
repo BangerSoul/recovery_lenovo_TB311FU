@@ -1,50 +1,54 @@
-# TWRP Extended Partition Flags for Lenovo Tab M11 (TB311FU / poplar)
-# <mount_point>   <fs_type>   <device_path>                         <flags>
+# TWRP Extended Partition Flags for Lenovo Tab M11 (TB311FU / poplar / tb8786p1_64_k66)
+# <mount_point>       <fs_type>   <device_path>                         <flags>
 
 # Physical Firmware Partitions Flashable in GUI (A/B Slot-Specific)
-/boot             emmc        /dev/block/by-name/boot               flags=display="Boot";backup=1;flashimg=1;slotselect
-/init_boot        emmc        /dev/block/by-name/init_boot          flags=display="Init Boot";backup=1;flashimg=1;slotselect
-/vendor_boot      emmc        /dev/block/by-name/vendor_boot        flags=display="Vendor Boot";backup=1;flashimg=1;slotselect
-/dtbo             emmc        /dev/block/by-name/dtbo               flags=display="DTBO";backup=1;flashimg=1;slotselect
-/vbmeta           emmc        /dev/block/by-name/vbmeta             flags=display="VBMeta";backup=1;flashimg=1;slotselect
-/vbmeta_system    emmc        /dev/block/by-name/vbmeta_system      flags=display="VBMeta System";backup=1;flashimg=1;slotselect
-/vbmeta_vendor    emmc        /dev/block/by-name/vbmeta_vendor      flags=display="VBMeta Vendor";backup=1;flashimg=1;slotselect
+/boot                 emmc        /dev/block/by-name/boot               flags=display="Boot";backup=1;flashimg=1;slotselect
+/init_boot            emmc        /dev/block/by-name/init_boot          flags=display="Init Boot";backup=1;flashimg=1;slotselect
+/vendor_boot          emmc        /dev/block/by-name/vendor_boot        flags=display="Vendor Boot";backup=1;flashimg=1;slotselect
+/dtbo                 emmc        /dev/block/by-name/dtbo               flags=display="DTBO";backup=1;flashimg=1;slotselect
+/vbmeta               emmc        /dev/block/by-name/vbmeta             flags=display="VBMeta";backup=1;flashimg=1;slotselect
+/vbmeta_system        emmc        /dev/block/by-name/vbmeta_system      flags=display="VBMeta System";backup=1;flashimg=1;slotselect
+/vbmeta_vendor        emmc        /dev/block/by-name/vbmeta_vendor      flags=display="VBMeta Vendor";backup=1;flashimg=1;slotselect
 
-# Dynamic Super Partition (Full Super Image Flash & Backup)
-/super            emmc        /dev/block/by-name/super              flags=display="Super (Dynamic Partitions)";backup=1;flashimg=1
+# Dynamic Super Block Device (Full Raw Container Backup & Flashing)
+/super                emmc        /dev/block/by-name/super              flags=display="Super (Dynamic Partitions Container)";backup=1;flashimg=1
 
-# Metadata & Device Encryption
-/metadata         ext4        /dev/block/by-name/md_udc             flags=display="Metadata";backup=1
-/lenovocust       ext4        /dev/block/by-name/lenovocust         flags=display="Lenovo Cust";backup=1;flashimg=1
-/lenovoraw        emmc        /dev/block/by-name/lenovoraw          flags=display="Lenovo Raw";backup=1;flashimg=1
+# Dynamic Logical Partitions (Individual Image Backup & Direct Flashing in GUI)
+/system_image         emmc        /dev/block/mapper/system              flags=display="System Image";backup=1;flashimg=1;slotselect
+/vendor_image         emmc        /dev/block/mapper/vendor              flags=display="Vendor Image";backup=1;flashimg=1;slotselect
+/product_image        emmc        /dev/block/mapper/product             flags=display="Product Image";backup=1;flashimg=1;slotselect
+/system_ext_image     emmc        /dev/block/mapper/system_ext          flags=display="System_EXT Image";backup=1;flashimg=1;slotselect
+/odm_dlkm_image       emmc        /dev/block/mapper/odm_dlkm            flags=display="ODM DLKM Image";backup=1;flashimg=1;slotselect
+/vendor_dlkm_image    emmc        /dev/block/mapper/vendor_dlkm         flags=display="Vendor DLKM Image";backup=1;flashimg=1;slotselect
+/system_dlkm_image    emmc        /dev/block/mapper/system_dlkm         flags=display="System DLKM Image";backup=1;flashimg=1;slotselect
+
+# Metadata & Security Key Storage
+/metadata             ext4        /dev/block/by-name/md_udc             flags=display="Metadata";backup=1
+/lenovocust           ext4        /dev/block/by-name/lenovocust         flags=display="Lenovo Cust";backup=1;flashimg=1
+/lenovoraw            emmc        /dev/block/by-name/lenovoraw          flags=display="Lenovo Raw";backup=1;flashimg=1
 
 # 1-Click Disaster Recovery Atomic Backup Ecosystem (Hardware Calibration & Identity)
-# Grouped via subpartitionof=/nvram to ensure unified atomic backup/restore of calibration and security identifiers
-/nvram            emmc        /dev/block/by-name/nvram              flags=display="NVRAM";backup=1
-/nvdata           ext4        /dev/block/by-name/nvdata             flags=display="NVDATA";backup=1;subpartitionof=/nvram
-/nvcfg            ext4        /dev/block/by-name/nvcfg              flags=display="NVCFG";backup=1;subpartitionof=/nvram
-/protect_f        ext4        /dev/block/by-name/protect1           flags=display="Protect F";backup=1;subpartitionof=/nvram
-/protect_s        ext4        /dev/block/by-name/protect2           flags=display="Protect S";backup=1;subpartitionof=/nvram
-/proinfo          emmc        /dev/block/by-name/proinfo            flags=display="Proinfo";backup=1;subpartitionof=/nvram
-/seccfg           emmc        /dev/block/by-name/seccfg             flags=display="SecCfg";backup=1;subpartitionof=/nvram
-/persist          ext4        /dev/block/by-name/persist            flags=display="Persist (DRM/Sensors)";backup=1
+# Subpartitions grouped under /nvram to ensure unified atomic backup/restore of calibration
+/nvram                emmc        /dev/block/by-name/nvram              flags=display="NVRAM";backup=1
+/nvdata               ext4        /dev/block/by-name/nvdata             flags=display="NVDATA";backup=1;subpartitionof=/nvram
+/nvcfg                ext4        /dev/block/by-name/nvcfg              flags=display="NVCFG";backup=1;subpartitionof=/nvram
+/protect_f            ext4        /dev/block/by-name/protect1           flags=display="Protect F";backup=1;subpartitionof=/nvram
+/protect_s            ext4        /dev/block/by-name/protect2           flags=display="Protect S";backup=1;subpartitionof=/nvram
+/proinfo              emmc        /dev/block/by-name/proinfo            flags=display="Proinfo";backup=1;subpartitionof=/nvram
+/seccfg               emmc        /dev/block/by-name/seccfg             flags=display="SecCfg";backup=1;subpartitionof=/nvram
+/persist              ext4        /dev/block/by-name/persist            flags=display="Persist (DRM/Sensors)";backup=1
 
-# Hardware Security, Bootloader & TrustZone Partitions
-/bootloader       emmc        /dev/block/by-name/lk                 flags=display="Bootloader (LK)";backup=1;flashimg=1
-/bootloader2      emmc        /dev/block/by-name/lk2                flags=display="Bootloader 2 (LK2)";backup=1;subpartitionof=/bootloader
-/logo             emmc        /dev/block/by-name/logo               flags=display="Boot Logo";backup=1;flashimg=1
-/expdb            emmc        /dev/block/by-name/expdb              flags=display="ExpDB";backup=1
-/tee1             emmc        /dev/block/by-name/tee1               flags=display="TEE 1 (TrustZone)";backup=1
-/tee2             emmc        /dev/block/by-name/tee2               flags=display="TEE 2 (TrustZone)";backup=1;subpartitionof=/tee1
-/scp1             emmc        /dev/block/by-name/scp1               flags=display="SCP 1";backup=1
-/scp2             emmc        /dev/block/by-name/scp2               flags=display="SCP 2";backup=1;subpartitionof=/scp1
-/sspm_1           emmc        /dev/block/by-name/sspm_1             flags=display="SSPM 1";backup=1
-/sspm_2           emmc        /dev/block/by-name/sspm_2             flags=display="SSPM 2";backup=1;subpartitionof=/sspm_1
-/md1img           emmc        /dev/block/by-name/md1img             flags=display="Modem (MD1)";backup=1;flashimg=1
-/gz1              emmc        /dev/block/by-name/gz1                flags=display="GZ 1";backup=1
-/gz2              emmc        /dev/block/by-name/gz2                flags=display="GZ 2";backup=1;subpartitionof=/gz1
-/spmfw            emmc        /dev/block/by-name/spmfw              flags=display="SPM Firmware";backup=1
+# Hardware Security, Bootloader & TrustZone Partitions (A/B Slotted)
+/bootloader           emmc        /dev/block/by-name/lk                 flags=display="Bootloader (LK)";backup=1;flashimg=1;slotselect
+/logo                 emmc        /dev/block/by-name/logo               flags=display="Boot Logo";backup=1;flashimg=1
+/expdb                emmc        /dev/block/by-name/expdb              flags=display="ExpDB";backup=1
+/tee                  emmc        /dev/block/by-name/tee                flags=display="TEE (TrustZone)";backup=1;slotselect
+/scp                  emmc        /dev/block/by-name/scp                flags=display="SCP";backup=1;slotselect
+/sspm                 emmc        /dev/block/by-name/sspm               flags=display="SSPM";backup=1;slotselect
+/md1img               emmc        /dev/block/by-name/md1img             flags=display="Modem (MD1)";backup=1;flashimg=1;slotselect
+/gz                   emmc        /dev/block/by-name/gz                 flags=display="GZ";backup=1;slotselect
+/spmfw                emmc        /dev/block/by-name/spmfw              flags=display="SPM Firmware";backup=1;slotselect
 
 # External Removable Storage
-/external_sd      auto        /dev/block/mmcblk1p1 /dev/block/mmcblk1 flags=display="MicroSD Card";storage;wipeingui;removable;fsflags="utf8"
-/usb_otg          auto        /dev/block/sda1 /dev/block/sda        flags=display="USB-OTG";storage;wipeingui;removable;fsflags="utf8"
+/external_sd          auto        /dev/block/mmcblk1p1 /dev/block/mmcblk1 flags=display="MicroSD Card";storage;wipeingui;removable;fsflags="utf8"
+/usb_otg              auto        /dev/block/sda1 /dev/block/sda        flags=display="USB-OTG";storage;wipeingui;removable;fsflags="utf8"

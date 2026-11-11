@@ -1,4 +1,4 @@
-# Android Recovery File System Table (fstab) for Lenovo Tab M11 (TB311FU / poplar)
+# Android Recovery File System Table (fstab) for Lenovo Tab M11 (TB311FU / poplar / tb8786p1_64_k66)
 # <src>                                      <mnt_point>     <type>  <mnt_flags and options>                             <fs_mgr_flags>
 
 # Logical Dynamic Partitions in Super (EROFS with EXT4 fallback)
@@ -10,12 +10,10 @@ product                                      /product        erofs   ro         
 product                                      /product        ext4    ro                                                  wait,slotselect,logical,first_stage_mount
 system_ext                                   /system_ext     erofs   ro                                                  wait,slotselect,logical,first_stage_mount
 system_ext                                   /system_ext     ext4    ro                                                  wait,slotselect,logical,first_stage_mount
-odm                                          /odm            erofs   ro                                                  wait,slotselect,logical,first_stage_mount
-odm                                          /odm            ext4    ro                                                  wait,slotselect,logical,first_stage_mount
-vendor_dlkm                                  /vendor_dlkm    erofs   ro                                                  wait,slotselect,logical,first_stage_mount
-vendor_dlkm                                  /vendor_dlkm    ext4    ro                                                  wait,slotselect,logical,first_stage_mount
 odm_dlkm                                     /odm_dlkm       erofs   ro                                                  wait,slotselect,logical,first_stage_mount
 odm_dlkm                                     /odm_dlkm       ext4    ro                                                  wait,slotselect,logical,first_stage_mount
+vendor_dlkm                                  /vendor_dlkm    erofs   ro                                                  wait,slotselect,logical,first_stage_mount
+vendor_dlkm                                  /vendor_dlkm    ext4    ro                                                  wait,slotselect,logical,first_stage_mount
 system_dlkm                                  /system_dlkm    erofs   ro                                                  wait,slotselect,logical,first_stage_mount
 system_dlkm                                  /system_dlkm    ext4    ro                                                  wait,slotselect,logical,first_stage_mount
 
@@ -52,20 +50,17 @@ system_dlkm                                  /system_dlkm    ext4    ro         
 /dev/block/by-name/seccfg                    /seccfg         emmc    defaults                                            defaults
 /dev/block/by-name/frp                       /persistent     emmc    defaults                                            defaults
 
-# Bootloader & TrustZone Security Partitions
-/dev/block/by-name/lk                        /bootloader     emmc    defaults                                            defaults
-/dev/block/by-name/lk2                       /bootloader2    emmc    defaults                                            defaults
-/dev/block/by-name/tee1                      /tee1           emmc    defaults                                            defaults
-/dev/block/by-name/tee2                      /tee2           emmc    defaults                                            defaults
+# Bootloader & TrustZone Security Partitions (A/B Slot-Specific on MT8786)
+/dev/block/by-name/lk                        /bootloader     emmc    defaults                                            wait,slotselect
+/dev/block/by-name/tee                       /tee            emmc    defaults                                            wait,slotselect
+/dev/block/by-name/scp                       /scp            emmc    defaults                                            wait,slotselect
+/dev/block/by-name/sspm                      /sspm           emmc    defaults                                            wait,slotselect
+/dev/block/by-name/gz                        /gz             emmc    defaults                                            wait,slotselect
+/dev/block/by-name/spmfw                     /spmfw          emmc    defaults                                            wait,slotselect
+/dev/block/by-name/md1img                    /md1img         emmc    defaults                                            wait,slotselect
+
+# Non-Slotted Firmware Partitions
 /dev/block/by-name/logo                      /logo           emmc    defaults                                            defaults
 /dev/block/by-name/expdb                     /expdb          emmc    defaults                                            defaults
-/dev/block/by-name/scp1                      /scp1           emmc    defaults                                            defaults
-/dev/block/by-name/scp2                      /scp2           emmc    defaults                                            defaults
-/dev/block/by-name/sspm_1                    /sspm_1         emmc    defaults                                            defaults
-/dev/block/by-name/sspm_2                    /sspm_2         emmc    defaults                                            defaults
-/dev/block/by-name/md1img                    /md1img         emmc    defaults                                            defaults
-/dev/block/by-name/gz1                       /gz1            emmc    defaults                                            defaults
-/dev/block/by-name/gz2                       /gz2            emmc    defaults                                            defaults
-/dev/block/by-name/spmfw                     /spmfw          emmc    defaults                                            defaults
 /dev/block/by-name/boot_para                 /boot_para      emmc    defaults                                            defaults
 /dev/block/by-name/otp                       /otp            emmc    defaults                                            defaults

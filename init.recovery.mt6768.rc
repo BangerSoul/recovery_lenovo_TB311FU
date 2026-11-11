@@ -1,15 +1,21 @@
-# Init script for MediaTek MT6768 / MT8786 Recovery Environment (Lenovo Tab M11 TB311FU)
+# Init script for MediaTek MT6768 / MT8786 Recovery Environment (Lenovo Tab M11 TB311FU / poplar)
 
 on early-init
     # Mount configfs for USB gadget composition
     mount configfs none /config
     mkdir /config/usb_gadget/g1 0770 shell shell
-    write /config/usb_gadget/g1/idVendor 0x18d1
-    write /config/usb_gadget/g1/idProduct 0x4ee7
+    write /config/usb_gadget/g1/idVendor 0x17ef
+    write /config/usb_gadget/g1/idProduct 0x7ef5
     mkdir /config/usb_gadget/g1/strings/0x409 0770
     write /config/usb_gadget/g1/strings/0x409/serialnumber ${ro.serialno}
     write /config/usb_gadget/g1/strings/0x409/manufacturer "Lenovo"
     write /config/usb_gadget/g1/strings/0x409/product "Lenovo Tab M11 Recovery"
+
+    # Microsoft OS Descriptors for instant MTP recognition on Windows
+    mkdir /config/usb_gadget/g1/os_desc 0770 shell shell
+    write /config/usb_gadget/g1/os_desc/use 1
+    write /config/usb_gadget/g1/os_desc/qw_sign "MSFT100"
+    write /config/usb_gadget/g1/os_desc/b_vendor_code 0x1
 
     # USB Functions Configuration
     mkdir /config/usb_gadget/g1/functions/ffs.adb
@@ -20,6 +26,7 @@ on early-init
     mkdir /config/usb_gadget/g1/configs/b.1 0770 shell shell
     mkdir /config/usb_gadget/g1/configs/b.1/strings/0x409 0770 shell shell
     write /config/usb_gadget/g1/configs/b.1/MaxPower 500
+    symlink /config/usb_gadget/g1/configs/b.1 /config/usb_gadget/g1/os_desc/b.1
 
     # Create FunctionFS mountpoints
     mkdir /dev/usb-ffs 0775 shell shell
@@ -96,8 +103,9 @@ on post-fs
     chown system system /sys/class/power_supply/usb/type
 
 on boot
-    # Set default USB configuration
     setprop sys.usb.configfs 1
+    # Default to mtp,adb for instant connectivity
+    setprop sys.usb.config mtp,adb
 
 # USB Gadget Mode Triggers
 on property:sys.usb.config=none
@@ -105,6 +113,7 @@ on property:sys.usb.config=none
     stop adbd
     stop fastbootd
     setprop sys.usb.ffs.ready 0
+    setprop sys.usb.ffs.mtp.ready 0
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     setprop sys.usb.state ${sys.usb.config}
@@ -117,8 +126,8 @@ on property:sys.usb.ffs.ready=1 && property:sys.usb.config=adb
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "adb"
-    write /config/usb_gadget/g1/idVendor 0x18d1
-    write /config/usb_gadget/g1/idProduct 0x4ee7
+    write /config/usb_gadget/g1/idVendor 0x17ef
+    write /config/usb_gadget/g1/idProduct 0x7ef1
     symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f1
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
@@ -130,8 +139,9 @@ on property:sys.usb.config=mtp
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp"
-    write /config/usb_gadget/g1/idVendor 0x18d1
-    write /config/usb_gadget/g1/idProduct 0x4ee1
+    write /config/usb_gadget/g1/idVendor 0x17ef
+    write /config/usb_gadget/g1/idProduct 0x7ef4
+    write /config/usb_gadget/g1/os_desc/use 1
     symlink /config/usb_gadget/g1/functions/ffs.mtp /config/usb_gadget/g1/configs/b.1/f1
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
@@ -144,8 +154,9 @@ on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb
     rm /config/usb_gadget/g1/configs/b.1/f1
     rm /config/usb_gadget/g1/configs/b.1/f2
     write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_adb"
-    write /config/usb_gadget/g1/idVendor 0x18d1
-    write /config/usb_gadget/g1/idProduct 0x4ee2
+    write /config/usb_gadget/g1/idVendor 0x17ef
+    write /config/usb_gadget/g1/idProduct 0x7ef5
+    write /config/usb_gadget/g1/os_desc/use 1
     symlink /config/usb_gadget/g1/functions/ffs.mtp /config/usb_gadget/g1/configs/b.1/f1
     symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f2
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}

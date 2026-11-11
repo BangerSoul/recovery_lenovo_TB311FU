@@ -148,15 +148,24 @@ jobs:
 
           echo "=== Locating Recovery Ramdisk and DTB ==="
           RECOVERY_RAMDISK=""
-          if [ -f "$OUT_DIR/ramdisk-recovery.cpio.gz" ]; then
+          if [ -f "$OUT_DIR/ramdisk-recovery.cpio.gz" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio.gz" ]; then
             RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
-          elif [ -f "$OUT_DIR/ramdisk-recovery.cpio" ]; then
+          elif [ -f "$OUT_DIR/ramdisk-recovery.cpio" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio" ]; then
             gzip -c "$OUT_DIR/ramdisk-recovery.cpio" > "$OUT_DIR/ramdisk-recovery.cpio.gz"
             RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
           elif [ -d "$OUT_DIR/recovery/root" ]; then
-            MKBOOTFS=$(find . -name "mkbootfs" | head -n 1)
-            $MKBOOTFS "$OUT_DIR/recovery/root" | gzip > "$OUT_DIR/ramdisk-recovery.cpio.gz"
-            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+            MKBOOTFS=$(find out/host -type f -name "mkbootfs" 2>/dev/null | head -n 1)
+            if [ -z "$MKBOOTFS" ]; then
+              MKBOOTFS=$(find . -type f -name "mkbootfs" 2>/dev/null | head -n 1)
+            fi
+            if [ -n "$MKBOOTFS" ] && [ -x "$MKBOOTFS" ]; then
+              "$MKBOOTFS" "$OUT_DIR/recovery/root" | gzip -9 > "$OUT_DIR/ramdisk-recovery.cpio.gz"
+              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+            else
+              echo "Using native cpio fallback for recovery ramdisk packaging..."
+              (cd "$OUT_DIR/recovery/root" && find . | cpio -o -H newc) | gzip -9 > "$OUT_DIR/ramdisk-recovery.cpio.gz"
+              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+            fi
           fi
 
           DTB_PATH="$OUT_DIR/dtb.img"
@@ -167,13 +176,19 @@ jobs:
           PLATFORM_RAMDISK="$TREE_DIR/prebuilt/platform_vendor_ramdisk.lz4"
 
           echo "Assembling turnkey hybrid vendor_boot with stock MTK platform modules..."
-          if [ -n "$RECOVERY_RAMDISK" ] && [ -f "$PLATFORM_RAMDISK" ] && [ -f "$DTB_PATH" ]; then
-            python3 "$TREE_DIR/tools/repack_v4.py" \
-              --output "$OUT_DIR/vendor_boot.img" \
-              --platform "$PLATFORM_RAMDISK" \
-              --recovery "$RECOVERY_RAMDISK" \
-              --dtb "$DTB_PATH" \
-              --cmdline "bootopt=64S3,32N2,64N2"
+          if [ -n "$RECOVERY_RAMDISK" ] && [ -s "$RECOVERY_RAMDISK" ] && [ -f "$PLATFORM_RAMDISK" ] && [ -f "$DTB_PATH" ]; then
+            RSIZE=$(stat -c%s "$RECOVERY_RAMDISK")
+            echo "Recovery ramdisk size: $RSIZE bytes"
+            if [ "$RSIZE" -gt 1000000 ]; then
+              python3 "$TREE_DIR/tools/repack_v4.py" \
+                --output "$OUT_DIR/vendor_boot.img" \
+                --platform "$PLATFORM_RAMDISK" \
+                --recovery "$RECOVERY_RAMDISK" \
+                --dtb "$DTB_PATH" \
+                --cmdline "bootopt=64S3,32N2,64N2"
+            else
+              echo "Error: Recovery ramdisk is suspiciously small ($RSIZE bytes)"
+            fi
           fi
 
           if [ -f "$OUT_DIR/vendor_boot.img" ]; then

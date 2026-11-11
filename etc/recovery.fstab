@@ -23,8 +23,9 @@ system_dlkm                                  /system_dlkm    ext4    ro         
 # Metadata Partition (FBE v2 Intermediate Key Storage on MediaTek md_udc)
 /dev/block/by-name/md_udc                    /metadata       ext4    noatime,nosuid,nodev,discard                        wait,check,formattable,first_stage_mount
 
-# User Data Partition (F2FS with FBE v2)
-/dev/block/by-name/userdata                  /data           f2fs    noatime,nosuid,nodev,discard,reserve_root=134217,resgid=1065,inlinecrypt wait,check,formattable,quota,latemount,fileencryption=aes-256-xts:aes-256-cts:v2,keydirectory=/metadata/vold/metadata_encryption
+# User Data Partition (Clean unencrypted F2FS mount with EXT4 fallback)
+/dev/block/by-name/userdata                  /data           f2fs    noatime,nosuid,nodev,discard                        wait,check,formattable
+/dev/block/by-name/userdata                  /data           ext4    noatime,nosuid,nodev,discard                        wait,check,formattable
 
 # Core Direct Physical Boot & Firmware Partitions (Slot-specific A/B)
 /dev/block/by-name/boot                      /boot           emmc    defaults                                            wait,slotselect

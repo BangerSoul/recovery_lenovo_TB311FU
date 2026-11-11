@@ -24,6 +24,7 @@
 
 # Metadata & Security Key Storage
 /metadata             ext4        /dev/block/by-name/md_udc             flags=display="Metadata";backup=1
+/data                 f2fs        /dev/block/by-name/userdata           flags=display="Data";backup=1;wipeingui
 /lenovocust           ext4        /dev/block/by-name/lenovocust         flags=display="Lenovo Cust";backup=1;flashimg=1
 /lenovoraw            emmc        /dev/block/by-name/lenovoraw          flags=display="Lenovo Raw";backup=1;flashimg=1
 

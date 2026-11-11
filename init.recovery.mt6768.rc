@@ -31,14 +31,23 @@ on early-init
     mount functionfs fastboot /dev/usb-ffs/fastboot rmode=0770,fmode=0660,uid=1000,gid=1000
 
 on init
-    # Kernel Module Loading for Touch Digitizers & I2C Bus Controller
+    # USB Controller Configuration
+    setprop sys.usb.configfs 1
+    setprop sys.usb.controller "musb-hdrc"
+    setprop sys.usb.ffs.aio_compat 0
+
+    # Kernel Module Loading for Touch Digitizers, Display & DRM Subsystem
+    insmod /lib/modules/jd9366ts.ko
+    insmod /lib/modules/hx83102e.ko
+    insmod /lib/modules/nt36523h.ko
+    insmod /lib/modules/lct_tp.ko
+    insmod /lib/modules/mediatek-drm.ko
     insmod /vendor/lib/modules/mtk_i2c.ko
     insmod /vendor/lib/modules/mtk_tpd.ko
     insmod /vendor/lib/modules/nvt_ts.ko
     insmod /vendor/lib/modules/novatek_ts.ko
     insmod /vendor/lib/modules/goodix_ts.ko
     insmod /vendor/lib/modules/focaltech_touch.ko
-    exec u:r:modprobe:s0 -- /vendor/bin/modprobe -a -d /vendor/lib/modules mtk_i2c mtk_tpd nvt_ts novatek_ts goodix_ts focaltech_touch
 
     # Set up hardware keystore and TEE driver device node permissions
     chmod 0666 /dev/teei_client
@@ -51,10 +60,20 @@ on init
     chown system system /dev/MT_pmic_adc_charger
 
 on fs
-    # Mount metadata partition early for FBE v2 key derivation
+    # Mount metadata partition early for FBE v2 key derivation (MTK md_udc block)
+    symlink /dev/block/by-name/md_udc /dev/block/by-name/metadata
+    mount ext4 /dev/block/by-name/md_udc /metadata noatime nosuid nodev discard wait check formattable
     mount ext4 /dev/block/by-name/metadata /metadata noatime nosuid nodev discard wait check formattable
 
 on post-fs
+    # Support A/B feature for EMMC and UFS boot region
+    symlink /dev/block/sda /dev/block/mmcblk0boot0
+    symlink /dev/block/sdb /dev/block/mmcblk0boot1
+    symlink /dev/block/mmcblk0boot0 /dev/block/platform/bootdevice/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/platform/bootdevice/by-name/preloader_b
+    symlink /dev/block/mmcblk0boot0 /dev/block/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/by-name/preloader_b
+
     # Display Backlight Control (11-bit PWM, 0 to 2047)
     chmod 0664 /sys/class/leds/lcd-backlight/brightness
     chown system system /sys/class/leds/lcd-backlight/brightness

@@ -140,40 +140,45 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           OUT_DIR="$GITHUB_WORKSPACE/recovery_workspace/out/target/product/TB311FU"
+          TREE_DIR="$GITHUB_WORKSPACE/tb311fu_recovery_tree"
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
 
           FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-          # Verify vendor_boot size; if under 5MB, repack with compiled recovery ramdisk
+          echo "=== Locating Recovery Ramdisk and DTB ==="
+          RECOVERY_RAMDISK=""
+          if [ -f "$OUT_DIR/ramdisk-recovery.cpio.gz" ]; then
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+          elif [ -f "$OUT_DIR/ramdisk-recovery.cpio" ]; then
+            gzip -c "$OUT_DIR/ramdisk-recovery.cpio" > "$OUT_DIR/ramdisk-recovery.cpio.gz"
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+          elif [ -d "$OUT_DIR/recovery/root" ]; then
+            MKBOOTFS=$(find . -name "mkbootfs" | head -n 1)
+            $MKBOOTFS "$OUT_DIR/recovery/root" | gzip > "$OUT_DIR/ramdisk-recovery.cpio.gz"
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+          fi
+
+          DTB_PATH="$OUT_DIR/dtb.img"
+          if [ ! -f "$DTB_PATH" ]; then
+            DTB_PATH="$TREE_DIR/prebuilt/dtb.img"
+          fi
+
+          PLATFORM_RAMDISK="$TREE_DIR/prebuilt/platform_vendor_ramdisk.lz4"
+
+          echo "Assembling turnkey hybrid vendor_boot with stock MTK platform modules..."
+          if [ -n "$RECOVERY_RAMDISK" ] && [ -f "$PLATFORM_RAMDISK" ] && [ -f "$DTB_PATH" ]; then
+            python3 "$TREE_DIR/tools/repack_v4.py" \
+              --output "$OUT_DIR/vendor_boot.img" \
+              --platform "$PLATFORM_RAMDISK" \
+              --recovery "$RECOVERY_RAMDISK" \
+              --dtb "$DTB_PATH" \
+              --cmdline "bootopt=64S3,32N2,64N2"
+          fi
+
           if [ -f "$OUT_DIR/vendor_boot.img" ]; then
             VSIZE=$(stat -c%s "$OUT_DIR/vendor_boot.img")
-            echo "Initial vendor_boot.img size: $VSIZE bytes"
-            if [ "$VSIZE" -lt 5000000 ]; then
-              echo "vendor_boot.img is too small ($VSIZE bytes). Packaging recovery ramdisk into vendor_boot.img..."
-              MKBOOTIMG=$(find . -name "mkbootimg" -o -name "mkbootimg.py" | head -n 1)
-              MKBOOTFS=$(find . -name "mkbootfs" | head -n 1)
-              echo "MKBOOTIMG: $MKBOOTIMG | MKBOOTFS: $MKBOOTFS"
-              RAMDISK_SRC=""
-              if [ -d "$OUT_DIR/recovery/root" ] && [ -n "$MKBOOTFS" ]; then
-                echo "Packaging recovery/root into vendor_ramdisk_repack.cpio.gz..."
-                $MKBOOTFS "$OUT_DIR/recovery/root" | gzip > "$OUT_DIR/vendor_ramdisk_repack.cpio.gz"
-                RAMDISK_SRC="$OUT_DIR/vendor_ramdisk_repack.cpio.gz"
-              elif [ -f "$OUT_DIR/ramdisk-recovery.cpio" ]; then
-                gzip -c "$OUT_DIR/ramdisk-recovery.cpio" > "$OUT_DIR/vendor_ramdisk_repack.cpio.gz"
-                RAMDISK_SRC="$OUT_DIR/vendor_ramdisk_repack.cpio.gz"
-              fi
-              if [ -n "$RAMDISK_SRC" ] && [ -n "$MKBOOTIMG" ]; then
-                echo "Repacking vendor_boot.img with $RAMDISK_SRC..."
-                python3 "$MKBOOTIMG" \
-                  --header_version 4 \
-                  --vendor_boot "$OUT_DIR/vendor_boot.img" \
-                  --vendor_ramdisk "$RAMDISK_SRC" \
-                  --dtb "$OUT_DIR/dtb.img" \
-                  --vendor_cmdline "bootopt=64S3,32N2,64N2"
-                echo "Repacked vendor_boot.img size: $(stat -c%s "$OUT_DIR/vendor_boot.img") bytes"
-              fi
-            fi
+            echo "Final vendor_boot.img size: $VSIZE bytes"
             cp "$OUT_DIR/vendor_boot.img" "$GITHUB_WORKSPACE/artifacts/${FLAVOR}-TB311FU-vendor_boot-${TIMESTAMP}.img"
           fi
           if [ -f "$OUT_DIR/recovery.img" ]; then

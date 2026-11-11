@@ -10,6 +10,10 @@
 /vbmeta_system    emmc        /dev/block/by-name/vbmeta_system      flags=display="VBMeta System";backup=1;flashimg=1;slotselect
 /vbmeta_vendor    emmc        /dev/block/by-name/vbmeta_vendor      flags=display="VBMeta Vendor";backup=1;flashimg=1;slotselect
 
+# Metadata & Device Encryption
+/metadata         ext4        /dev/block/by-name/md_udc             flags=display="Metadata";backup=1
+/lenovocust       ext4        /dev/block/by-name/lenovocust         flags=display="Lenovo Cust";backup=1
+
 # 1-Click Disaster Recovery Atomic Backup Ecosystem
 # Grouped via subpartitionof=/nvram to ensure unified atomic backup/restore of calibration and security identifiers
 /nvram            emmc        /dev/block/by-name/nvram              flags=display="NVRAM";backup=1

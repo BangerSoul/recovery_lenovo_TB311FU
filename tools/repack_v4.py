@@ -14,7 +14,7 @@ FMT = '<8sIIIII2048sI16sIIQIIII'
 def page_align(n, p):
     return ((n + p - 1) // p) * p
 
-def repack(output_path, platform_path, recovery_path, dtb_path, cmdline="bootopt=64S3,32N2,64N2"):
+def repack(output_path, platform_path, recovery_path, dtb_path, cmdline="bootopt=64S3,32N2,64N2 buildvariant=eng"):
     print("==========================================================")
     print("Assembling Turnkey Dual-Fragment Vendor Boot Header v4 Image")
     print(f"  Platform Ramdisk: {platform_path}")
@@ -36,7 +36,7 @@ def repack(output_path, platform_path, recovery_path, dtb_path, cmdline="bootopt
     kernel_addr = 0x40080000
     ramdisk_addr = 0x47c80000
     dtb_addr = 0x41f78000
-    tags_addr = 0x40000100
+    tags_addr = 0x4bc80000
 
     combined_ramdisk = plat_data + rec_data
     vendor_ramdisk_size = len(combined_ramdisk)

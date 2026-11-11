@@ -148,23 +148,26 @@ jobs:
 
           echo "=== Locating Recovery Ramdisk and DTB ==="
           RECOVERY_RAMDISK=""
-          if [ -f "$OUT_DIR/ramdisk-recovery.cpio.gz" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio.gz" ]; then
-            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+          if [ -f "$OUT_DIR/ramdisk-recovery.cpio.lz4" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio.lz4" ]; then
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.lz4"
+          elif [ -f "$OUT_DIR/ramdisk-recovery.cpio.gz" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio.gz" ]; then
+            gzip -dc "$OUT_DIR/ramdisk-recovery.cpio.gz" | lz4 -l -9 -f > "$OUT_DIR/ramdisk-recovery.cpio.lz4"
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.lz4"
           elif [ -f "$OUT_DIR/ramdisk-recovery.cpio" ] && [ -s "$OUT_DIR/ramdisk-recovery.cpio" ]; then
-            gzip -c "$OUT_DIR/ramdisk-recovery.cpio" > "$OUT_DIR/ramdisk-recovery.cpio.gz"
-            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+            lz4 -l -9 -f "$OUT_DIR/ramdisk-recovery.cpio" "$OUT_DIR/ramdisk-recovery.cpio.lz4"
+            RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.lz4"
           elif [ -d "$OUT_DIR/recovery/root" ]; then
             MKBOOTFS=$(find out/host -type f -name "mkbootfs" 2>/dev/null | head -n 1)
             if [ -z "$MKBOOTFS" ]; then
               MKBOOTFS=$(find . -type f -name "mkbootfs" 2>/dev/null | head -n 1)
             fi
             if [ -n "$MKBOOTFS" ] && [ -x "$MKBOOTFS" ]; then
-              "$MKBOOTFS" "$OUT_DIR/recovery/root" | gzip -9 > "$OUT_DIR/ramdisk-recovery.cpio.gz"
-              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+              "$MKBOOTFS" "$OUT_DIR/recovery/root" | lz4 -l -9 -f > "$OUT_DIR/ramdisk-recovery.cpio.lz4"
+              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.lz4"
             else
-              echo "Using native cpio fallback for recovery ramdisk packaging..."
-              (cd "$OUT_DIR/recovery/root" && find . | cpio -o -H newc) | gzip -9 > "$OUT_DIR/ramdisk-recovery.cpio.gz"
-              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.gz"
+              echo "Using native cpio + lz4 fallback for recovery ramdisk packaging..."
+              (cd "$OUT_DIR/recovery/root" && find . | cpio -o -H newc) | lz4 -l -9 -f > "$OUT_DIR/ramdisk-recovery.cpio.lz4"
+              RECOVERY_RAMDISK="$OUT_DIR/ramdisk-recovery.cpio.lz4"
             fi
           fi
 
@@ -185,7 +188,7 @@ jobs:
                 --platform "$PLATFORM_RAMDISK" \
                 --recovery "$RECOVERY_RAMDISK" \
                 --dtb "$DTB_PATH" \
-                --cmdline "bootopt=64S3,32N2,64N2"
+                --cmdline "bootopt=64S3,32N2,64N2 buildvariant=eng"
             else
               echo "Error: Recovery ramdisk is suspiciously small ($RSIZE bytes)"
             fi

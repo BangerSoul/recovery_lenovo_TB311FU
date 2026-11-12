@@ -1,0 +1,30 @@
+import /init.recovery.usb.rc
+
+on init
+    setprop sys.usb.configfs 1
+    setprop sys.usb.controller "musb-hdrc"
+    setprop sys.usb.ffs.aio_compat 0
+
+on post-fs
+    # A/B preloader symlinks
+    symlink /dev/block/sda /dev/block/mmcblk0boot0
+    symlink /dev/block/sdb /dev/block/mmcblk0boot1
+    symlink /dev/block/mmcblk0boot0 /dev/block/platform/bootdevice/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/platform/bootdevice/by-name/preloader_b
+    symlink /dev/block/mmcblk0boot0 /dev/block/by-name/preloader_a
+    symlink /dev/block/mmcblk0boot1 /dev/block/by-name/preloader_b
+
+    exec u:r:update_engine:s0 root root -- /system/bin/mtk_plpath_utils
+
+on post-fs && property:ro.vendor.dynamicdata=disable
+    symlink /dev/block/platform/bootdevice/by-name/userdata /dev/block/dm-userdata
+
+on post-fs-data
+    mkdir /data/media 0770 media_rw media_rw
+    mkdir /data/media/0 0770 media_rw media_rw
+
+# Daemon that automatically ensures /data/media/0 exists whenever /data is mounted
+service setup_media /system/bin/sh -c "while true; do if [ -d /data/lost+found ] && [ ! -d /data/media/0 ]; then mkdir -p /data/media/0; chown -R 1023:1023 /data/media; chmod -R 0775 /data/media; fi; sleep 2; done"
+    user root
+    group root
+    seclabel u:r:recovery:s0

@@ -1,82 +1,12 @@
-# Init script for MediaTek MT6768 / MT8786 Recovery Environment (Lenovo Tab M11 TB311FU / poplar)
-
-on early-init
-    # Mount configfs for USB gadget composition
-    mount configfs none /config
-    mkdir /config/usb_gadget/g1 0770 shell shell
-    write /config/usb_gadget/g1/idVendor 0x17ef
-    write /config/usb_gadget/g1/idProduct 0x7ef5
-    mkdir /config/usb_gadget/g1/strings/0x409 0770
-    write /config/usb_gadget/g1/strings/0x409/serialnumber ${ro.serialno}
-    write /config/usb_gadget/g1/strings/0x409/manufacturer "Lenovo"
-    write /config/usb_gadget/g1/strings/0x409/product "Lenovo Tab M11 Recovery"
-
-    # Microsoft OS Descriptors for instant MTP recognition on Windows
-    mkdir /config/usb_gadget/g1/os_desc 0770 shell shell
-    write /config/usb_gadget/g1/os_desc/use 1
-    write /config/usb_gadget/g1/os_desc/qw_sign "MSFT100"
-    write /config/usb_gadget/g1/os_desc/b_vendor_code 0x1
-
-    # USB Functions Configuration
-    mkdir /config/usb_gadget/g1/functions/ffs.adb
-    mkdir /config/usb_gadget/g1/functions/ffs.mtp
-    mkdir /config/usb_gadget/g1/functions/ffs.fastboot
-
-    # USB Configuration Endpoints
-    mkdir /config/usb_gadget/g1/configs/b.1 0770 shell shell
-    mkdir /config/usb_gadget/g1/configs/b.1/strings/0x409 0770 shell shell
-    write /config/usb_gadget/g1/configs/b.1/MaxPower 500
-    symlink /config/usb_gadget/g1/configs/b.1 /config/usb_gadget/g1/os_desc/b.1
-
-    # Create FunctionFS mountpoints
-    mkdir /dev/usb-ffs 0775 shell shell
-    mkdir /dev/usb-ffs/adb 0770 shell shell
-    mount functionfs adb /dev/usb-ffs/adb rmode=0770,fmode=0660,uid=2000,gid=2000
-    mkdir /dev/usb-ffs/mtp 0770 shell shell
-    mount functionfs mtp /dev/usb-ffs/mtp rmode=0770,fmode=0660,uid=2000,gid=2000
-    mkdir /dev/usb-ffs/fastboot 0770 system system
-    mount functionfs fastboot /dev/usb-ffs/fastboot rmode=0770,fmode=0660,uid=1000,gid=1000
+import /init.recovery.usb.rc
 
 on init
-    # USB Controller Configuration
     setprop sys.usb.configfs 1
     setprop sys.usb.controller "musb-hdrc"
     setprop sys.usb.ffs.aio_compat 0
 
-    # Kernel Module Loading for Touch Digitizers, Display & DRM Subsystem
-    insmod /lib/modules/jd9366ts.ko
-    insmod /lib/modules/hx83102e.ko
-    insmod /lib/modules/nt36523h.ko
-    insmod /lib/modules/lct_tp.ko
-    insmod /lib/modules/mediatek-drm.ko
-    insmod /vendor/lib/modules/mtk_i2c.ko
-    insmod /vendor/lib/modules/mtk_tpd.ko
-    insmod /vendor/lib/modules/nvt_ts.ko
-    insmod /vendor/lib/modules/novatek_ts.ko
-    insmod /vendor/lib/modules/goodix_ts.ko
-    insmod /vendor/lib/modules/focaltech_touch.ko
-
-    # Set up hardware keystore and TEE driver device node permissions
-    chmod 0666 /dev/teei_client
-    chmod 0666 /dev/tz_vfs
-    chmod 0660 /dev/trustkernel_tee
-    chmod 0666 /dev/kmsg
-
-    # Fuel gauge and charging device node permissions
-    chmod 0660 /dev/MT_pmic_adc_charger
-    chown system system /dev/MT_pmic_adc_charger
-
-on fs
-    # USB charge mode activation for MediaTek UDC
-    write /sys/class/udc/musb-hdrc/device/cmode 2
-
-    # Mount metadata partition early for FBE v2 key derivation (MTK md_udc block)
-    symlink /dev/block/by-name/md_udc /dev/block/by-name/metadata
-    mount ext4 /dev/block/by-name/md_udc /metadata noatime nosuid nodev discard wait check formattable
-    mount ext4 /dev/block/by-name/metadata /metadata noatime nosuid nodev discard wait check formattable
-
 on post-fs
-    # Support A/B feature for EMMC and UFS boot region
+    # A/B preloader symlinks
     symlink /dev/block/sda /dev/block/mmcblk0boot0
     symlink /dev/block/sdb /dev/block/mmcblk0boot1
     symlink /dev/block/mmcblk0boot0 /dev/block/platform/bootdevice/by-name/preloader_a
@@ -84,155 +14,17 @@ on post-fs
     symlink /dev/block/mmcblk0boot0 /dev/block/by-name/preloader_a
     symlink /dev/block/mmcblk0boot1 /dev/block/by-name/preloader_b
 
-    # Display Backlight Control (11-bit PWM, 0 to 2047)
-    chmod 0664 /sys/class/leds/lcd-backlight/brightness
-    chown system system /sys/class/leds/lcd-backlight/brightness
+    exec u:r:update_engine:s0 root root -- /system/bin/mtk_plpath_utils
 
-    # Haptic Vibrator Sysfs Nodes (MTK PMIC Vibrator)
-    chmod 0666 /sys/class/timed_output/vibrator/enable
-    chmod 0666 /sys/class/leds/vibrator/activate
-    chmod 0666 /sys/class/leds/vibrator/duration
-    chmod 0666 /sys/class/leds/vibrator/state
-    chown system system /sys/class/timed_output/vibrator/enable
-    chown system system /sys/class/leds/vibrator/activate
-    chown system system /sys/class/leds/vibrator/duration
-    chown system system /sys/class/leds/vibrator/state
+on post-fs && property:ro.vendor.dynamicdata=disable
+    symlink /dev/block/platform/bootdevice/by-name/userdata /dev/block/dm-userdata
 
-    # Charging Subsystem & Fuel Gauge Sysfs Nodes (MT6358 PMIC / SGM41512 Charger)
-    chmod 0664 /sys/class/power_supply/battery/capacity
-    chmod 0664 /sys/class/power_supply/battery/status
-    chmod 0664 /sys/class/power_supply/battery/current_now
-    chmod 0664 /sys/class/power_supply/battery/voltage_now
-    chmod 0664 /sys/class/power_supply/battery/temp
-    chmod 0664 /sys/class/power_supply/usb/type
-    chown system system /sys/class/power_supply/battery/capacity
-    chown system system /sys/class/power_supply/battery/status
-    chown system system /sys/class/power_supply/battery/current_now
-    chown system system /sys/class/power_supply/battery/voltage_now
-    chown system system /sys/class/power_supply/battery/temp
-    chown system system /sys/class/power_supply/usb/type
+on post-fs-data
+    mkdir /data/media 0770 media_rw media_rw
+    mkdir /data/media/0 0770 media_rw media_rw
 
-on boot
-    setprop sys.usb.configfs 1
-    # Default to mtp,adb for instant connectivity
-    setprop sys.usb.config mtp,adb
-
-# USB Gadget Mode Triggers
-on property:sys.usb.config=none
-    write /config/usb_gadget/g1/UDC "none"
-    stop adbd
-    stop fastbootd
-    setprop sys.usb.ffs.ready 0
-    setprop sys.usb.ffs.mtp.ready 0
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=adb
-    start adbd
-
-on property:sys.usb.ffs.ready=1 && property:sys.usb.config=adb
-    write /config/usb_gadget/g1/UDC "none"
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "adb"
-    write /config/usb_gadget/g1/idVendor 0x17ef
-    write /config/usb_gadget/g1/idProduct 0x7ef1
-    symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f1
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=mtp
-    write /config/usb_gadget/g1/UDC "none"
-    stop adbd
-    setprop sys.usb.ffs.ready 0
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp"
-    write /config/usb_gadget/g1/idVendor 0x17ef
-    write /config/usb_gadget/g1/idProduct 0x7ef4
-    write /config/usb_gadget/g1/os_desc/use 1
-    symlink /config/usb_gadget/g1/functions/ffs.mtp /config/usb_gadget/g1/configs/b.1/f1
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=mtp,adb
-    start adbd
-
-on property:sys.usb.ffs.ready=1 && property:sys.usb.config=mtp,adb
-    write /config/usb_gadget/g1/UDC "none"
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "mtp_adb"
-    write /config/usb_gadget/g1/idVendor 0x17ef
-    write /config/usb_gadget/g1/idProduct 0x7ef5
-    write /config/usb_gadget/g1/os_desc/use 1
-    symlink /config/usb_gadget/g1/functions/ffs.mtp /config/usb_gadget/g1/configs/b.1/f1
-    symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f2
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
-
-on property:sys.usb.config=fastboot
-    start fastbootd
-
-on property:sys.usb.ffs.ready=1 && property:sys.usb.config=fastboot
-    write /config/usb_gadget/g1/UDC "none"
-    rm /config/usb_gadget/g1/configs/b.1/f1
-    rm /config/usb_gadget/g1/configs/b.1/f2
-    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "fastboot"
-    write /config/usb_gadget/g1/idVendor 0x18d1
-    write /config/usb_gadget/g1/idProduct 0xd001
-    symlink /config/usb_gadget/g1/functions/ffs.fastboot /config/usb_gadget/g1/configs/b.1/f1
-    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
-    setprop sys.usb.state ${sys.usb.config}
-
-# Cryptography & FBE v2 Daemons
-service teei_daemon /system/bin/teei_daemon
-    user system
-    group system
-    disabled
+# Daemon that automatically ensures /data/media/0 exists whenever /data is mounted
+service setup_media /system/bin/sh -c "while true; do if [ -d /data/lost+found ] && [ ! -d /data/media/0 ]; then mkdir -p /data/media/0; chown -R 1023:1023 /data/media; chmod -R 0775 /data/media; fi; sleep 2; done"
+    user root
+    group root
     seclabel u:r:recovery:s0
-
-service keystore2 /system/bin/keystore2 /data/misc/keystore
-    user keystore
-    group keystore drmrpc readproc log
-    disabled
-    seclabel u:r:recovery:s0
-
-service keymint-default /system/bin/android.hardware.security.keymint-service.mediatek
-    user system
-    group system
-    disabled
-    seclabel u:r:recovery:s0
-
-service gatekeeper-default /system/bin/android.hardware.gatekeeper-service.mediatek
-    user system
-    group system
-    disabled
-    seclabel u:r:recovery:s0
-
-# Decryption Triggers & FBE v2 Key Derivation
-on property:hwservicemanager.ready=true
-    start teei_daemon
-    start keymint-default
-    start gatekeeper-default
-
-on property:ro.crypto.state=encrypted && property:ro.crypto.type=file
-    install_keyring
-    start teei_daemon
-    start keystore2
-    start keymint-default
-    start gatekeeper-default
-
-on property:crypto.ready=1
-    start teei_daemon
-    start keystore2
-    start keymint-default
-    start gatekeeper-default
-
-# Offline Charging & Power Management Daemon
-service charger /system/bin/charger
-    user system
-    group system graphics input
-    capabilities SYS_BOOT
-    seclabel u:r:charger:s0

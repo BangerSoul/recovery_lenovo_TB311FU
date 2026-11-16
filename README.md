@@ -1,43 +1,79 @@
-# Custom Recovery Device Tree for Lenovo Tab M11 (`TB311FU`)
+# recovery_lenovo_TB311FU
 
-Custom Recovery (TWRP / OrangeFox) device tree and automated GitHub Actions build pipeline for the **Lenovo Tab M11** (`TB311FU`, MediaTek Helio G88 / MT6769, board `tb8786p1_64_k66`).
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Target: Lenovo Tab M11](https://img.shields.io/badge/Device-Lenovo%20Tab%20M11%20(TB311FU)-orange.svg)](https://www.lenovo.com)
+[![Branch: main](https://img.shields.io/badge/Branch-main-success.svg)](https://github.com/BangerSoul/recovery_lenovo_TB311FU)
+[![Recovery: TWRP 3.7+](https://img.shields.io/badge/Recovery-TWRP%203.7%2B-blueviolet.svg)](https://twrp.me)
 
----
-
-## Hardware & Architecture Specifications
-
-| Parameter | Specification |
-| :--- | :--- |
-| **Device Model** | Lenovo Tab M11 (`TB311FU`) / `poplar` |
-| **SoC** | MediaTek Helio G88 (`MT6769H` / `MT8786` platform) |
-| **Architecture** | 64-bit ARM (`arm64-v8a`) |
-| **Kernel Architecture** | Generic Kernel Image (GKI 2.0, Boot Header v4) |
-| **Target Partition** | `vendor_boot` (`vendor_boot.img`) |
-| **Display Panel** | 1920x1200 WUXGA Landscape (`TW_THEME := landscape_hdpi`) |
-| **Backlight Sysfs** | `/sys/class/leds/lcd-backlight/brightness` (11-bit PWM, max 2047) |
-| **Encryption** | Android 14/15 File-Based Encryption (FBE v2) via TrustKernel TEE |
-| **Dynamic Partitions** | Virtual A/B Super Container (9,663,676,416 bytes) |
-| **Userspace Fastboot** | `fastbootd` enabled |
+Team Win Recovery Project (TWRP) recovery device tree, secondary slot `boot_b` chained boot vector deployment, BCB handling, and non-destructive slot switching suite for the **Lenovo Tab M11** (`TB311FU`, codename `poplar`, MediaTek Helio G88 / MT8786 / MT6768).
 
 ---
 
-## Flashing Instructions
+## Architecture: Secondary Slot Recovery Vector (`boot_b`)
 
-Since Lenovo Tab M11 uses Android GKI 2.0 with Boot Header v4, recovery ramdisk resides inside **`vendor_boot`**:
+In standard MediaTek GKI 2.0 architectures, flashing TWRP to `vendor_boot` breaks Little Kernel (LK) RSA4096 signature verification, causing immediate 2-second Orange State reboot loops and requiring full factory re-flashing.
 
-```bash
-# 1. Reboot into Fastboot mode
-adb reboot bootloader
+To guarantee 100% factory firmware preservation and non-destructive recovery access:
 
-# 2. Flash compiled vendor_boot image
-fastboot flash vendor_boot vendor_boot.img
+1. **Factory Firmware Preservation:**
+   - OEM `vendor_boot` remains **100% stock and untouched** on flash.
+   - OEM `vbmeta` remains **100% factory signed** with `flags = 0x00`.
+2. **Dual-Slot Allocation:**
+   - **Slot `_a`**: Production OS (LineageOS 23.2 / GSI / PostmarketOS with PoplarKernel GKI 2.0).
+   - **Slot `_b`**: Custom Recovery Vector (`recovery_boot.img` containing the TWRP ramdisk assembled in an Android Header v4 vector with aligned OEM VBMeta block).
+3. **Non-Destructive Slot Switching:**
+   - Transitioning into TWRP executes purely via slot switching:
+     ```bash
+     fastboot --set-active=b && fastboot reboot recovery
+     ```
+   - Returning to the primary OS switches back:
+     ```bash
+     fastboot --set-active=a && fastboot reboot
+     ```
+4. **Bootloader Control Block (BCB) Handling:**
+   - Tools in `tools/dual_boot_manager.py` handle BCB message reading, formatting, and zeroing (`/dev/block/by-name/misc`), preventing stuck recovery boot loops.
 
-# 3. Reboot directly into recovery
-fastboot reboot recovery
+---
+
+## Deployment & Usage
+
+### 1. Deploy Recovery Vector to Slot B
+```powershell
+.\scripts\deploy_recovery_boot_b.ps1 -ImagePath recovery_boot.img
 ```
+*Validates the 32 MB (33,554,432 B) alignment and flashes exclusively to `boot_b`.*
+
+### 2. Enter TWRP Recovery (Slot B)
+- From Host Fastboot:
+  ```powershell
+  .\scripts\switch_to_recovery.ps1
+  ```
+- Or on Linux:
+  ```bash
+  ./scripts/switch_to_recovery.sh
+  ```
+
+### 3. Return to Production OS (Slot A)
+- From Host Fastboot:
+  ```powershell
+  .\scripts\switch_to_os.ps1
+  ```
+- Or on Linux:
+  ```bash
+  ./scripts/switch_to_os.sh
+  ```
 
 ---
 
-## Building Locally or via GitHub Actions
+## Included Tools & Verification Suites
 
-This repository includes a fully automated GitHub Actions CI workflow in `.github/workflows/build-recovery.yml` that compiles both TWRP and OrangeFox on GitHub-hosted `ubuntu-22.04` runners and uploads flashable releases automatically.
+- **`tools/dual_boot_manager.py`**: Python CLI managing dual-boot slot transitions, cryptographic AVB verification, and BCB staging.
+- **`tools/verify_avb_chain.py`**: Cryptographic verifier for 32MB boot vectors, validating the OEM 2,432-byte VBMeta block and AVB footer.
+- **`tools/test_kernel_recovery.py`**: Automated unit test suite verifying BCB serialization, AVB salt verification, and slot switching safety.
+
+---
+
+## Maintainer
+
+- **Maintainer:** Azmathulla Shaik ([@BangerSoul](https://github.com/BangerSoul))
+- **Email:** `iamshaikhazmathulla@outlook.com`

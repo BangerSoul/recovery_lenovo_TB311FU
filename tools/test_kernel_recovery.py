@@ -25,29 +25,54 @@ if PROJECT_ROOT not in sys.path:
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
-from kernel_recovery.verify_avb_chain import (
-    verify_avb_chain,
-    verify_vendor_boot_hash,
-    verify_file,
-    AVBVerificationError,
-    EXPECTED_BOOT_SIZE,
-    EXPECTED_OEM_KEY_SHA1,
-    EXPECTED_AUTH_DIGEST,
-    VENDOR_BOOT_PINNED_SIZE,
-    VENDOR_BOOT_PINNED_HASH,
-    AVB_SALT_HEX,
-    AVB_SALT_BYTES,
-)
+try:
+    from kernel_recovery.verify_avb_chain import (
+        verify_avb_chain,
+        verify_vendor_boot_hash,
+        verify_file,
+        AVBVerificationError,
+        EXPECTED_BOOT_SIZE,
+        EXPECTED_OEM_KEY_SHA1,
+        EXPECTED_AUTH_DIGEST,
+        VENDOR_BOOT_PINNED_SIZE,
+        VENDOR_BOOT_PINNED_HASH,
+        AVB_SALT_HEX,
+        AVB_SALT_BYTES,
+    )
 
-from kernel_recovery.dual_boot_manager import (
-    DualBootManager,
-    DeviceTransport,
-    create_bcb_message,
-    parse_bcb_message,
-    create_empty_bcb,
-    verify_vbmeta_flag_byte,
-    FORBIDDEN_DATA_COMMANDS,
-)
+    from kernel_recovery.dual_boot_manager import (
+        DualBootManager,
+        DeviceTransport,
+        create_bcb_message,
+        parse_bcb_message,
+        create_empty_bcb,
+        verify_vbmeta_flag_byte,
+        FORBIDDEN_DATA_COMMANDS,
+    )
+except ImportError:
+    from verify_avb_chain import (
+        verify_avb_chain,
+        verify_vendor_boot_hash,
+        verify_file,
+        AVBVerificationError,
+        EXPECTED_BOOT_SIZE,
+        EXPECTED_OEM_KEY_SHA1,
+        EXPECTED_AUTH_DIGEST,
+        VENDOR_BOOT_PINNED_SIZE,
+        VENDOR_BOOT_PINNED_HASH,
+        AVB_SALT_HEX,
+        AVB_SALT_BYTES,
+    )
+
+    from dual_boot_manager import (
+        DualBootManager,
+        DeviceTransport,
+        create_bcb_message,
+        parse_bcb_message,
+        create_empty_bcb,
+        verify_vbmeta_flag_byte,
+        FORBIDDEN_DATA_COMMANDS,
+    )
 
 
 class TestAVBChainVerification(unittest.TestCase):

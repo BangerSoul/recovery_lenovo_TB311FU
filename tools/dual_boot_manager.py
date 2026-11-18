@@ -408,24 +408,29 @@ class DualBootManager:
         self.transport = DeviceTransport(serial=serial, mock=mock, dry_run=dry_run)
 
         # Image paths
+        backup_dir = os.environ.get("POPLAR_BACKUP_DIR", "/home/bangersoul/GSI-Development/backups/full-device-backup")
         self.boot_a_path = resolve_image_file([
+            os.path.join(backup_dir, "boot_a.img"),
             os.path.join(r"C:\platform-tools", "poplar_boot_v12_clean.img"),
             os.path.join(PROJECT_ROOT, "poplar_boot_v12_clean.img"),
             "poplar_boot_v12_clean.img",
             os.path.join(r"C:\platform-tools", "stock_boot.img"),
         ])
         self.boot_b_path = resolve_image_file([
+            os.path.join(backup_dir, "boot_b.img"),
             os.path.join(r"C:\platform-tools", "recovery_boot.img"),
             os.path.join(PROJECT_ROOT, "recovery_boot.img"),
             "recovery_boot.img",
         ])
         self.vendor_boot_path = resolve_image_file([
+            os.path.join(backup_dir, "vendor_boot_a.img"),
             os.path.join(r"C:\platform-tools", "stock_vendor_boot.img"),
             os.path.join(PROJECT_ROOT, "stock_vendor_boot.img"),
             "stock_vendor_boot.img",
             r"C:\ProgramData\RSA\Download\RomFiles\TB311FU_ROW_OPEN_USER_M1457.5_W_ZUI_17.5.36.508_ST_261024\TB311FU_ROW_OPEN_USER_M1457.5_W_ZUI_17.5.36.508_ST_261024\image\vendor_boot.img",
         ])
         self.vbmeta_path = resolve_image_file([
+            os.path.join(backup_dir, "vbmeta_a.img"),
             os.path.join(r"C:\platform-tools", "stock_vbmeta.img"),
             os.path.join(PROJECT_ROOT, "stock_vbmeta.img"),
             "stock_vbmeta.img",
@@ -511,7 +516,15 @@ class DualBootManager:
         4. Runtime checks (if in OS): kernel 6.6, wlan0 UP, su root authority.
         """
         results: Dict[str, Any] = {"checks": {}, "success": False}
-        all_passed = True
+        if self.mock:
+            results["checks"]["boot_a"] = "PASS"
+            results["checks"]["vendor_boot_a"] = "PASS"
+            results["checks"]["vbmeta_a"] = "PASS"
+            results["checks"]["mock"] = "PASS: Simulated Slot A baseline"
+            results["success"] = True
+            if verbose:
+                print("  [PASS] Simulated Slot A baseline verification passed.")
+            return True, results
 
         if verbose:
             print("\n======================================================================")
@@ -648,6 +661,15 @@ class DualBootManager:
         5. Zero risk of 2-second Orange State reboot loop.
         """
         results: Dict[str, Any] = {"checks": {}, "success": False}
+        if self.mock:
+            results["checks"]["boot_b"] = "PASS"
+            results["checks"]["vendor_boot_b"] = "PASS"
+            results["checks"]["vbmeta_b"] = "PASS"
+            results["checks"]["mock"] = "PASS: Simulated Slot B baseline"
+            results["success"] = True
+            if verbose:
+                print("  [PASS] Simulated Slot B baseline verification passed.")
+            return True, results
         all_passed = True
 
         if verbose:

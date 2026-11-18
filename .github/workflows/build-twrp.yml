@@ -1,19 +1,18 @@
-name: Build OrangeFox Recovery (12.1)
+name: Build TWRP Recovery (12.1)
 
 on:
   push:
     branches:
-      - orangefox
-      - feature/orangefox-mt8786
+      - twrp
     tags:
       - 'v*'
       - 'release-*'
   workflow_dispatch:
     inputs:
       MANIFEST_BRANCH:
-        description: 'OrangeFox sync branch:'
+        description: 'TWRP manifest branch:'
         required: true
-        default: '12.1'
+        default: 'twrp-12.1'
       BUILD_TARGET:
         description: 'Make target:'
         required: true
@@ -34,7 +33,7 @@ on:
 
 jobs:
   build:
-    name: Build OrangeFox Recovery for Lenovo TB311FU
+    name: Build TWRP Recovery for Lenovo TB311FU
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -76,28 +75,15 @@ jobs:
           git config --global user.email "ci@bangersoul.dev"
           git config --global color.ui false
 
-      - name: Initialize OrangeFox 12.1 Manifest
+      - name: Initialize TWRP 12.1 Manifest
         run: |
           mkdir -p "$GITHUB_WORKSPACE/recovery_workspace"
           cd "$GITHUB_WORKSPACE/recovery_workspace"
 
-          echo "Initializing OrangeFox 12.1 sources via official sync..."
-          git clone --depth=1 https://gitlab.com/OrangeFox/sync.git /tmp/fox_sync
-          if [ -f "/tmp/fox_sync/orangefox_sync.sh" ]; then
-            chmod +x /tmp/fox_sync/orangefox_sync.sh
-            /tmp/fox_sync/orangefox_sync.sh --branch 12.1 --path "$GITHUB_WORKSPACE/recovery_workspace" || {
-              echo "Fallback: Manual repo init for OrangeFox Manifest..."
-              repo init --depth=1 -u https://gitlab.com/OrangeFox/Manifest.git -b fox_12.1 || \
-              repo init --depth=1 -u https://gitlab.com/OrangeFox/manifest.git -b fox_12.1 || \
-              repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
-              repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
-            }
-          else
-            echo "Initializing OrangeFox minimal manifest..."
-            repo init --depth=1 -u https://gitlab.com/OrangeFox/Manifest.git -b fox_12.1 || \
-            repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
-            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
-          fi
+          BRANCH="${{ inputs.MANIFEST_BRANCH || 'twrp-12.1' }}"
+          echo "Initializing TWRP minimal manifest ($BRANCH)..."
+          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b "$BRANCH"
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
 
       - name: Link TB311FU Recovery Device Tree
         run: |
@@ -107,21 +93,18 @@ jobs:
           echo "=== Device tree populated at $TARGET_DIR ==="
           ls -la "$TARGET_DIR"
 
-      - name: Compile OrangeFox Recovery Image
+      - name: Compile TWRP Recovery Image
         run: |
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           export ALLOW_MISSING_DEPENDENCIES=true
           export LC_ALL="C"
           export TWRP_ROOMSERVICE_DISABLED=true
-          export FOX_BUILD_DEVICE="TB311FU"
-          export FOX_VERSION="R12.1"
-          export OF_MAINTAINER="BangerSoul"
           source build/envsetup.sh
 
           TYPE="${{ inputs.BUILD_TYPE || 'eng' }}"
           TARGET="${{ inputs.BUILD_TARGET || 'vendorbootimage' }}"
 
-          lunch "omni_TB311FU-${TYPE}" || lunch "twrp_TB311FU-${TYPE}"
+          lunch "twrp_TB311FU-${TYPE}"
 
           # Fix rsync root/vendor conflict in recovery ramdisk packaging:
           grep -rl "rsync -a --exclude=sdcard" build/ 2>/dev/null | xargs -r sed -i 's/rsync -a --exclude=sdcard/rsync -a --exclude=vendor --exclude=\/root\/vendor --exclude=sdcard/g'
@@ -201,16 +184,16 @@ jobs:
             VSIZE=$(stat -c%s "$OUT_DIR/vendor_boot.img")
             echo "Final vendor_boot.img size: $VSIZE bytes"
             cp -f "$OUT_DIR/vendor_boot.img" "$RELEASE_DIR/vendor_boot.img"
-            cp -f "$OUT_DIR/vendor_boot.img" "$RELEASE_DIR/OrangeFox-TB311FU-vendor_boot-${TIMESTAMP}.img"
+            cp -f "$OUT_DIR/vendor_boot.img" "$RELEASE_DIR/TWRP-TB311FU-vendor_boot-${TIMESTAMP}.img"
           fi
 
           # Ensure recovery.img is present in release dir
           if [ -f "$OUT_DIR/recovery.img" ]; then
             cp -f "$OUT_DIR/recovery.img" "$RELEASE_DIR/recovery.img"
-            cp -f "$OUT_DIR/recovery.img" "$RELEASE_DIR/OrangeFox-TB311FU-recovery-${TIMESTAMP}.img"
+            cp -f "$OUT_DIR/recovery.img" "$RELEASE_DIR/TWRP-TB311FU-recovery-${TIMESTAMP}.img"
           elif [ -f "$OUT_DIR/boot.img" ]; then
             cp -f "$OUT_DIR/boot.img" "$RELEASE_DIR/recovery.img"
-            cp -f "$OUT_DIR/boot.img" "$RELEASE_DIR/OrangeFox-TB311FU-recovery-${TIMESTAMP}.img"
+            cp -f "$OUT_DIR/boot.img" "$RELEASE_DIR/TWRP-TB311FU-recovery-${TIMESTAMP}.img"
           elif [ -f "$RELEASE_DIR/vendor_boot.img" ]; then
             cp -f "$RELEASE_DIR/vendor_boot.img" "$RELEASE_DIR/recovery.img"
           fi
@@ -228,15 +211,15 @@ jobs:
       - name: Upload Run Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OrangeFox-TB311FU-${{ steps.package.outputs.TIMESTAMP }}
+          name: TWRP-TB311FU-${{ steps.package.outputs.TIMESTAMP }}
           path: release_artifacts/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/orangefox'
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/twrp'
         with:
           tag_name: release-${{ steps.package.outputs.TIMESTAMP }}
-          name: "OrangeFox 12.1 Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
+          name: "TWRP 12.1 Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
           draft: false
           prerelease: false
           files: |

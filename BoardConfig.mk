@@ -1,7 +1,6 @@
 #
 # Copyright (C) 2026 The Android Open Source Project
 # Copyright (C) 2026 TeamWin Recovery Project
-# Copyright (C) 2026 OrangeFox Recovery Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +17,7 @@
 
 # Device Path & Identification
 DEVICE_PATH := device/lenovo/TB311FU
-TW_DEVICE_VERSION := 12.1-OrangeFox-BangerSoul
+TW_DEVICE_VERSION := 12.1-BangerSoul
 
 # Target Architecture
 TARGET_ARCH := arm64
@@ -83,29 +82,10 @@ AB_OTA_PARTITIONS += \
 # Recovery FSTAB Configuration
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# OrangeFox Recovery Flags & Features
-OF_AB_DEVICE := 1
-OF_SUPPORT_ALL_VB_META_VERSIONS := 1
-OF_USE_MAGISKBOOT := 1
-OF_USE_MAGISKBOOT_FOR_ALL_PATCHES := 1
-OF_OTG_IS_SUPPORTED := 1
-OF_IGNORE_LOGICAL_MOUNT_ERRORS := 1
-OF_ENABLE_GETLOGS := 1
-OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
-OF_DISABLE_MIUI_SPECIFIC_FEATURES := 1
-OF_FLASHLIGHT_ENABLE := 0
-OF_ALLOW_DISABLE_NAVBAR := 0
-OF_CHECK_OVERWRITE_ATTEMPTS := 1
-OF_QUICK_BACKUP_LIST := "/boot;/data;/system;/vendor;"
-FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER := 1
-FOX_REPLACE_BOOTIMAGE_DATE := 1
-FOX_VERSION := "R12.1"
-FOX_BUILD_DEVICE := "TB311FU"
-OF_MAINTAINER := "BangerSoul"
+# Fastbootd Userspace Dynamic Partition Flashing
+TW_INCLUDE_FASTBOOTD := true
 
-# Filesystems, Encryption & Security
-TW_INCLUDE_NTFS_3G := true
-TW_INCLUDE_EXFAT := true
+# Cryptography & File-Based Encryption (FBE v2)
 TW_INCLUDE_CRYPTO := true
 TW_INCLUDE_CRYPTO_FBE := true
 TW_INCLUDE_FBE_METADATA_DECRYPT := true
@@ -115,18 +95,14 @@ PLATFORM_VERSION := 16
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
 TW_PREPARE_DATA_MEDIA_EARLY := true
 
-# Display & MinUI UI Configuration (1200x1920 WUXGA Portrait)
+# Filesystems
+TW_INCLUDE_NTFS_3G := true
+TW_INCLUDE_EXFAT := true
+
+# MinUI Display Configuration (1200x1920 WUXGA Portrait)
 TW_THEME := portrait_hdpi
 TW_SCREEN_WIDTH := 1200
 TW_SCREEN_HEIGHT := 1920
-DEVICE_SCREEN_WIDTH := 1200
-DEVICE_SCREEN_HEIGHT := 1920
-OF_SCREEN_W := 1200
-OF_SCREEN_H := 1920
-OF_STATUS_H := 80
-OF_STATUS_INDENT_LEFT := 48
-OF_STATUS_INDENT_RIGHT := 48
-OF_HIDE_NOTCH := 1
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 RECOVERY_GRAPHICS_FORCE_USE_LINELENGTH := true
 TW_NO_SCREEN_BLANK := true
@@ -158,12 +134,9 @@ TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
 TW_EXTERNAL_STORAGE_PATH := "/external_sd"
 TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
 
-# Terminal Emulator, Sideload, Tools & Fastbootd
+# Terminal, Tools, Slot Switching & Backup
 TW_INCLUDE_INCLUDED_TERMINAL := true
 TW_INCLUDE_TERMINAL := true
-FOX_ASH_IS_BASH := 1
-OF_ENABLE_CONSOLE := 1
-TW_INCLUDE_FASTBOOTD := true
 TW_INCLUDE_REPACKTOOLS := true
 TW_INCLUDE_LIBRESETPROP := true
 TW_INCLUDE_RESETPROP := true

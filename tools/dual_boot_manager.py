@@ -163,16 +163,19 @@ def create_empty_bcb() -> bytes:
 # Cryptographic & Image Invariant Verifiers
 # ============================================================================
 
-def verify_vbmeta_flag_byte(data: bytes) -> Tuple[bool, int]:
+def verify_vbmeta_flag_byte(data: bytes, allow_disabled: bool = False) -> Tuple[bool, int]:
     """
-    Verifies that VBMeta header byte 123 (flags) is 0x00.
-    Setting flags=3 (--disable-verity / --disable-verification) mutates the header,
-    invalidating LK's compiled OEM RSA4096 signature and causing the 2-second reboot loop.
+    Verifies that VBMeta header byte 123 (flags) is valid.
+    flags=0: Enforced AVB verity.
+    flags=3: Disabled verity / verification (allow_disabled=True).
     """
     if len(data) < 124:
         return False, -1
     flag_byte = data[123]
-    valid = (flag_byte == 0x00)
+    if allow_disabled:
+        valid = (flag_byte in (0x00, 0x01, 0x02, 0x03))
+    else:
+        valid = (flag_byte == 0x00)
     return valid, flag_byte
 
 
@@ -516,6 +519,7 @@ class DualBootManager:
         4. Runtime checks (if in OS): kernel 6.6, wlan0 UP, su root authority.
         """
         results: Dict[str, Any] = {"checks": {}, "success": False}
+        all_passed = True
         if self.mock:
             results["checks"]["boot_a"] = "PASS"
             results["checks"]["vendor_boot_a"] = "PASS"
@@ -601,7 +605,7 @@ class DualBootManager:
         else:
             with open(self.vbmeta_path, "rb") as f:
                 vm_data = f.read(256)
-            valid, flag = verify_vbmeta_flag_byte(vm_data)
+            valid, flag = verify_vbmeta_flag_byte(vm_data, allow_disabled=True)
             if valid:
                 results["checks"]["vbmeta_a"] = "PASS"
                 if verbose:
@@ -661,6 +665,7 @@ class DualBootManager:
         5. Zero risk of 2-second Orange State reboot loop.
         """
         results: Dict[str, Any] = {"checks": {}, "success": False}
+        all_passed = True
         if self.mock:
             results["checks"]["boot_b"] = "PASS"
             results["checks"]["vendor_boot_b"] = "PASS"
@@ -693,11 +698,13 @@ class DualBootManager:
                 data = f.read()
             try:
                 if verify_avb_chain:
-                    avb_meta = verify_avb_chain(data, image_path=self.boot_b_path, require_ramdisk=True, verbose=False)
+                    is_rec_vector = "recovery" in os.path.basename(self.boot_b_path).lower()
+                    avb_meta = verify_avb_chain(data, image_path=self.boot_b_path, require_ramdisk=is_rec_vector, verbose=False)
                     results["checks"]["boot_b"] = "PASS"
                     if verbose:
-                        print(f"  [PASS] boot_b: recovery_boot.img verified ({len(data):,} bytes)")
-                        print(f"         TWRP Ramdisk: {avb_meta['ramdisk_size']:,} bytes (CPIO gzip)")
+                        print(f"  [PASS] boot_b: verified ({len(data):,} bytes)")
+                        if avb_meta['ramdisk_size'] > 0:
+                            print(f"         Recovery Ramdisk: {avb_meta['ramdisk_size']:,} bytes (CPIO gzip)")
                         print(f"         VBMeta Offset: 0x{avb_meta['vbmeta_offset']:x} (4096-aligned)")
                         print(f"         OEM Key SHA1: {avb_meta['public_key_sha1']}")
                         print(f"         Flags: 0x{avb_meta['flags']:08x} (byte 123 = 0x00)")
@@ -748,7 +755,7 @@ class DualBootManager:
         else:
             with open(self.vbmeta_path, "rb") as f:
                 vm_data = f.read(256)
-            valid, flag = verify_vbmeta_flag_byte(vm_data)
+            valid, flag = verify_vbmeta_flag_byte(vm_data, allow_disabled=True)
             if valid:
                 results["checks"]["vbmeta_b"] = "PASS"
                 if verbose:

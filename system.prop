@@ -5,14 +5,13 @@
 ro.product.device=TB311FU
 ro.product.model=Lenovo Tab M11
 ro.product.name=TB311FU
-# NOTE: ro.build.product matches TARGET_DEVICE (TB311FU) to avoid duplicate sysprop conflict with poplar
 ro.build.product=TB311FU
 ro.product.board=tb8786p1_64_k66
 ro.board.platform=mt6768
 ro.product.manufacturer=Lenovo
 ro.product.brand=Lenovo
 
-# Display & MinUI UI Metrics (1920x1200 Landscape WUXGA)
+# Display & MinUI UI Metrics (1200x1920 Portrait WUXGA)
 ro.sf.lcd_density=280
 ro.recovery.ui.margin_height=0
 ro.recovery.ui.margin_width=0

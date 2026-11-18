@@ -85,6 +85,9 @@ class TestAVBChainVerification(unittest.TestCase):
         cls.vendor_boot_path = r"C:\platform-tools\stock_vendor_boot.img"
         cls.stock_boot_path = r"C:\platform-tools\stock_boot.img"
 
+        if not os.path.exists(cls.clean_boot_path):
+            raise unittest.SkipTest("Physical device flash dumps not present on host; skipping hardware image verification")
+
         with open(cls.clean_boot_path, "rb") as f:
             cls.clean_boot_data = f.read()
 

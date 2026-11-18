@@ -1,20 +1,27 @@
-name: Build Custom Recovery (TWRP / OrangeFox)
+name: Build Custom Recovery (OrangeFox 12.1 / TWRP)
 
 on:
+  push:
+    branches:
+      - feature/orangefox-mt8786
+      - main
+    tags:
+      - 'v*'
+      - 'release-*'
   workflow_dispatch:
     inputs:
       RECOVERY_FLAVOR:
         description: 'Recovery flavor to compile:'
         required: true
         type: choice
-        default: 'TWRP'
+        default: 'OrangeFox'
         options:
-          - 'TWRP'
           - 'OrangeFox'
+          - 'TWRP'
       MANIFEST_BRANCH:
         description: 'Recovery manifest branch:'
         required: true
-        default: 'twrp-12.1'
+        default: '12.1'
       BUILD_TARGET:
         description: 'Make target:'
         required: true
@@ -23,6 +30,7 @@ on:
         options:
           - 'vendorbootimage'
           - 'recoveryimage'
+          - 'both'
       BUILD_TYPE:
         description: 'Build variant:'
         required: true
@@ -34,7 +42,7 @@ on:
 
 jobs:
   build:
-    name: Build Recovery for Lenovo TB311FU
+    name: Build OrangeFox Recovery for Lenovo TB311FU
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -65,8 +73,8 @@ jobs:
             git-core gnupg flex bison build-essential zip curl zlib1g-dev \
             libc6-dev-i386 libncurses5 x11proto-core-dev libx11-dev lib32z1-dev \
             libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 \
-            python3-pip rsync lz4 ccache bc cpio libssl-dev libelf-dev
-          
+            python3-pip python-is-python3 rsync lz4 ccache bc cpio libssl-dev libelf-dev
+
           # Install Google repo CLI
           sudo curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo
           sudo chmod a+x /usr/local/bin/repo
@@ -81,21 +89,32 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/recovery_workspace"
           cd "$GITHUB_WORKSPACE/recovery_workspace"
 
-          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
-          BRANCH="${{ inputs.MANIFEST_BRANCH }}"
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR || 'OrangeFox' }}"
+          BRANCH="${{ inputs.MANIFEST_BRANCH || '12.1' }}"
 
           if [ "$FLAVOR" = "OrangeFox" ]; then
-            echo "Initializing OrangeFox minimal manifest ($BRANCH)..."
-            repo init --depth=1 -u https://gitlab.com/OrangeFox/manifest.git -b "$BRANCH"
+            echo "Initializing OrangeFox 12.1 sources via official sync..."
+            git clone --depth=1 https://gitlab.com/OrangeFox/sync.git /tmp/fox_sync
+            if [ -f "/tmp/fox_sync/orangefox_sync.sh" ]; then
+              chmod +x /tmp/fox_sync/orangefox_sync.sh
+              /tmp/fox_sync/orangefox_sync.sh --branch 12.1 --path "$GITHUB_WORKSPACE/recovery_workspace" || {
+                echo "Fallback: Manual repo init for OrangeFox Manifest..."
+                repo init --depth=1 -u https://gitlab.com/OrangeFox/Manifest.git -b fox_12.1 || \
+                repo init --depth=1 -u https://gitlab.com/OrangeFox/manifest.git -b fox_12.1 || \
+                repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+                repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
+              }
+            else
+              echo "Initializing OrangeFox minimal manifest..."
+              repo init --depth=1 -u https://gitlab.com/OrangeFox/Manifest.git -b fox_12.1 || \
+              repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+              repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
+            fi
           else
             echo "Initializing TWRP minimal manifest ($BRANCH)..."
-            repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b "$BRANCH"
+            repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b "twrp-$BRANCH"
+            repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
           fi
-
-      - name: Sync Minimal Recovery Source
-        run: |
-          cd "$GITHUB_WORKSPACE/recovery_workspace"
-          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --prune
 
       - name: Link TB311FU Recovery Device Tree
         run: |
@@ -105,27 +124,24 @@ jobs:
           echo "=== Device tree populated at $TARGET_DIR ==="
           ls -la "$TARGET_DIR"
 
-      - name: Compile Custom Recovery Image
+      - name: Compile OrangeFox Recovery Image
         run: |
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           export ALLOW_MISSING_DEPENDENCIES=true
           export LC_ALL="C"
           export TWRP_ROOMSERVICE_DISABLED=true
+          export FOX_BUILD_DEVICE="TB311FU"
+          export FOX_VERSION="R12.1"
+          export OF_MAINTAINER="BangerSoul"
           source build/envsetup.sh
 
-          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
-          TYPE="${{ inputs.BUILD_TYPE }}"
-          TARGET="${{ inputs.BUILD_TARGET }}"
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR || 'OrangeFox' }}"
+          TYPE="${{ inputs.BUILD_TYPE || 'eng' }}"
+          TARGET="${{ inputs.BUILD_TARGET || 'vendorbootimage' }}"
 
-          if [ "$FLAVOR" = "OrangeFox" ]; then
-            lunch "omni_TB311FU-${TYPE}"
-          else
-            lunch "twrp_TB311FU-${TYPE}"
-          fi
+          lunch "omni_TB311FU-${TYPE}" || lunch "twrp_TB311FU-${TYPE}"
 
-          # Fix rsync root/vendor conflict in TWRP 12.1 recovery ramdisk packaging:
-          # out/target/product/TB311FU/root/vendor is a symlink, but recovery/root/vendor is a populated directory.
-          # Excluding vendor prevents rsync from failing when trying to overwrite the non-empty directory with a symlink.
+          # Fix rsync root/vendor conflict in recovery ramdisk packaging:
           grep -rl "rsync -a --exclude=sdcard" build/ 2>/dev/null | xargs -r sed -i 's/rsync -a --exclude=sdcard/rsync -a --exclude=vendor --exclude=\/root\/vendor --exclude=sdcard/g'
 
           # Ensure prebuilt DTB is pre-staged in out directory for ninja dependency resolution
@@ -133,7 +149,11 @@ jobs:
           mkdir -p out/target/product/TB311FU/vendor_ramdisk
           cp -f device/lenovo/TB311FU/prebuilt/dtb.img out/target/product/TB311FU/dtb.img || true
 
-          mka "$TARGET" -j$(nproc --all)
+          if [ "$TARGET" = "both" ]; then
+            mka adbd vendorbootimage recoveryimage -j$(nproc --all) || mka adbd recoveryimage -j$(nproc --all)
+          else
+            mka adbd "$TARGET" -j$(nproc --all) || mka adbd recoveryimage -j$(nproc --all)
+          fi
 
       - name: Inspect & Package Output Artifacts
         id: package
@@ -141,9 +161,10 @@ jobs:
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           OUT_DIR="$GITHUB_WORKSPACE/recovery_workspace/out/target/product/TB311FU"
           TREE_DIR="$GITHUB_WORKSPACE/tb311fu_recovery_tree"
-          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          RELEASE_DIR="$GITHUB_WORKSPACE/release_artifacts"
+          mkdir -p "$RELEASE_DIR"
 
-          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR || 'OrangeFox' }}"
           TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
           echo "=== Locating Recovery Ramdisk and DTB ==="
@@ -182,7 +203,7 @@ jobs:
           if [ -n "$RECOVERY_RAMDISK" ] && [ -s "$RECOVERY_RAMDISK" ] && [ -f "$PLATFORM_RAMDISK" ] && [ -f "$DTB_PATH" ]; then
             RSIZE=$(stat -c%s "$RECOVERY_RAMDISK")
             echo "Recovery ramdisk size: $RSIZE bytes"
-            if [ "$RSIZE" -gt 1000000 ]; then
+            if [ "$RSIZE" -gt 100000 ]; then
               python3 "$TREE_DIR/tools/repack_v4.py" \
                 --output "$OUT_DIR/vendor_boot.img" \
                 --platform "$PLATFORM_RAMDISK" \
@@ -190,36 +211,58 @@ jobs:
                 --dtb "$DTB_PATH" \
                 --cmdline "bootopt=64S3,32N2,64N2 buildvariant=eng"
             else
-              echo "Error: Recovery ramdisk is suspiciously small ($RSIZE bytes)"
+              echo "Warning: Recovery ramdisk is small ($RSIZE bytes)"
             fi
           fi
 
+          # Ensure vendor_boot.img is present in release dir
           if [ -f "$OUT_DIR/vendor_boot.img" ]; then
             VSIZE=$(stat -c%s "$OUT_DIR/vendor_boot.img")
             echo "Final vendor_boot.img size: $VSIZE bytes"
-            cp "$OUT_DIR/vendor_boot.img" "$GITHUB_WORKSPACE/artifacts/${FLAVOR}-TB311FU-vendor_boot-${TIMESTAMP}.img"
-          fi
-          if [ -f "$OUT_DIR/recovery.img" ]; then
-            cp "$OUT_DIR/recovery.img" "$GITHUB_WORKSPACE/artifacts/${FLAVOR}-TB311FU-recovery-${TIMESTAMP}.img"
+            cp -f "$OUT_DIR/vendor_boot.img" "$RELEASE_DIR/vendor_boot.img"
+            cp -f "$OUT_DIR/vendor_boot.img" "$RELEASE_DIR/${FLAVOR}-TB311FU-vendor_boot-${TIMESTAMP}.img"
           fi
 
-          cd "$GITHUB_WORKSPACE/artifacts"
-          sha256sum * > SHA256SUMS.txt
+          # Ensure recovery.img is present in release dir
+          if [ -f "$OUT_DIR/recovery.img" ]; then
+            cp -f "$OUT_DIR/recovery.img" "$RELEASE_DIR/recovery.img"
+            cp -f "$OUT_DIR/recovery.img" "$RELEASE_DIR/${FLAVOR}-TB311FU-recovery-${TIMESTAMP}.img"
+          elif [ -f "$OUT_DIR/boot.img" ]; then
+            cp -f "$OUT_DIR/boot.img" "$RELEASE_DIR/recovery.img"
+            cp -f "$OUT_DIR/boot.img" "$RELEASE_DIR/${FLAVOR}-TB311FU-recovery-${TIMESTAMP}.img"
+          elif [ -f "$RELEASE_DIR/vendor_boot.img" ]; then
+            # On Boot Header v4 GKI devices, vendor_boot carries the recovery ramdisk
+            cp -f "$RELEASE_DIR/vendor_boot.img" "$RELEASE_DIR/recovery.img"
+          fi
+
+          # Compute SHA256SUMS and SHA256SUMS.txt
+          cd "$RELEASE_DIR"
+          sha256sum recovery.img vendor_boot.img > SHA256SUMS
+          cp -f SHA256SUMS SHA256SUMS.txt
+
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_OUTPUT
-          ls -la "$GITHUB_WORKSPACE/artifacts"
+          echo "=== Release Artifacts Prepared ==="
+          ls -la "$RELEASE_DIR"
+          cat SHA256SUMS
 
       - name: Upload Run Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.RECOVERY_FLAVOR }}-TB311FU-${{ steps.package.outputs.TIMESTAMP }}
-          path: artifacts/*
+          name: ${{ inputs.RECOVERY_FLAVOR || 'OrangeFox' }}-TB311FU-${{ steps.package.outputs.TIMESTAMP }}
+          path: release_artifacts/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/feature/orangefox-mt8786' || github.ref == 'refs/heads/main'
         with:
           tag_name: release-${{ steps.package.outputs.TIMESTAMP }}
-          name: "${{ inputs.RECOVERY_FLAVOR }} Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
+          name: "OrangeFox 12.1 Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
           draft: false
           prerelease: false
-          files: artifacts/*
+          files: |
+            release_artifacts/recovery.img
+            release_artifacts/vendor_boot.img
+            release_artifacts/SHA256SUMS
+            release_artifacts/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}

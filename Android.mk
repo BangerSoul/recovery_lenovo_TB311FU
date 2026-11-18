@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2026 The Android Open Source Project
 # Copyright (C) 2026 TeamWin Recovery Project
+# Copyright (C) 2026 OrangeFox Recovery Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +40,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := recovery.fstab
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := ETC
-LOCAL_SRC_FILES := etc/recovery.fstab
+LOCAL_SRC_FILES := recovery.fstab
 LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)/system/etc
 include $(BUILD_PREBUILT)
 
@@ -47,7 +48,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := fstab.mt6768
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := ETC
-LOCAL_SRC_FILES := etc/recovery.fstab
+LOCAL_SRC_FILES := recovery.fstab
 LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)/first_stage_ramdisk
 include $(BUILD_PREBUILT)
 

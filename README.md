@@ -3,9 +3,11 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Target: Lenovo Tab M11](https://img.shields.io/badge/Device-Lenovo%20Tab%20M11%20(TB311FU)-orange.svg)](https://www.lenovo.com)
 [![Branch: main](https://img.shields.io/badge/Branch-main-success.svg)](https://github.com/BangerSoul/recovery_lenovo_TB311FU)
+[![Branch: feature/orangefox-mt8786](https://img.shields.io/badge/Branch-orangefox--mt8786-orange.svg)](https://github.com/BangerSoul/recovery_lenovo_TB311FU/tree/feature/orangefox-mt8786)
+[![Recovery: OrangeFox R12.1](https://img.shields.io/badge/Recovery-OrangeFox%20R12.1-ff5722.svg)](https://orangefox.tech)
 [![Recovery: TWRP 3.7+](https://img.shields.io/badge/Recovery-TWRP%203.7%2B-blueviolet.svg)](https://twrp.me)
 
-Team Win Recovery Project (TWRP) recovery device tree, secondary slot `boot_b` chained boot vector deployment, BCB handling, and non-destructive slot switching suite for the **Lenovo Tab M11** (`TB311FU`, codename `poplar`, MediaTek Helio G88 / MT8786 / MT6768).
+OrangeFox Recovery Project (R12.1) & Team Win Recovery Project (TWRP) recovery device tree, secondary slot `boot_b` chained boot vector deployment, BCB handling, and non-destructive slot switching suite for the **Lenovo Tab M11** (`TB311FU`, codename `poplar`, MediaTek Helio G88 / MT8786 / MT6768).
 
 ---
 

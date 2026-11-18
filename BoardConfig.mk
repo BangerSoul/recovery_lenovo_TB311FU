@@ -1,6 +1,7 @@
 #
 # Copyright (C) 2026 The Android Open Source Project
 # Copyright (C) 2026 TeamWin Recovery Project
+# Copyright (C) 2026 OrangeFox Recovery Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +18,9 @@
 
 # Device Path & Identification
 DEVICE_PATH := device/lenovo/TB311FU
-TW_DEVICE_VERSION := 12.1-BangerSoul
+TW_DEVICE_VERSION := 12.1-OrangeFox-BangerSoul
 
-# Architecture
+# Target Architecture
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-2a
 TARGET_CPU_ABI := arm64-v8a
@@ -48,6 +49,7 @@ BOARD_KERNEL_CMDLINE := bootopt=64S3,32N2,64N2 buildvariant=eng
 
 # GKI 2.0 & Boot Header v4 Recovery Architecture
 BOARD_BOOT_HEADER_VERSION := 4
+BOARD_VENDOR_BOOT_HEADER_VERSION := 4
 BOARD_USES_VENDOR_BOOT := true
 BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
 BOARD_INCLUDE_RECOVERY_RAMDISK_IN_VENDOR_BOOT := true
@@ -60,7 +62,7 @@ BOARD_MKBOOTIMG_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION) --base $(B
 BOARD_SUPER_PARTITION_SIZE := 9663676416
 BOARD_SUPER_PARTITION_GROUPS := mtk_dynamic_partitions
 BOARD_MTK_DYNAMIC_PARTITIONS_SIZE := 9659482112
-BOARD_MTK_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product system_ext odm
+BOARD_MTK_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product system_ext odm vendor_dlkm odm_dlkm system_dlkm
 
 # Virtual A/B Slot Architecture
 AB_OTA_UPDATER := true
@@ -78,21 +80,53 @@ AB_OTA_PARTITIONS += \
     system_ext \
     odm
 
-# Fastbootd Userspace Dynamic Partition Flashing
-TW_INCLUDE_FASTBOOTD := true
+# Recovery FSTAB Configuration
+TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# Cryptography & File-Based Encryption (FBE v2)
+# OrangeFox Recovery Flags & Features
+OF_AB_DEVICE := 1
+OF_SUPPORT_ALL_VB_META_VERSIONS := 1
+OF_USE_MAGISKBOOT := 1
+OF_USE_MAGISKBOOT_FOR_ALL_PATCHES := 1
+OF_OTG_IS_SUPPORTED := 1
+OF_IGNORE_LOGICAL_MOUNT_ERRORS := 1
+OF_ENABLE_GETLOGS := 1
+OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
+OF_DISABLE_MIUI_SPECIFIC_FEATURES := 1
+OF_FLASHLIGHT_ENABLE := 0
+OF_ALLOW_DISABLE_NAVBAR := 0
+OF_CHECK_OVERWRITE_ATTEMPTS := 1
+OF_QUICK_BACKUP_LIST := "/boot;/data;/system;/vendor;"
+FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER := 1
+FOX_REPLACE_BOOTIMAGE_DATE := 1
+FOX_VERSION := "R12.1"
+FOX_BUILD_DEVICE := "TB311FU"
+OF_MAINTAINER := "BangerSoul"
+
+# Filesystems, Encryption & Security
+TW_INCLUDE_NTFS_3G := true
+TW_INCLUDE_EXFAT := true
 TW_INCLUDE_CRYPTO := true
 TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_FBE_METADATA_DECRYPT := true
 BOARD_USES_METADATA_PARTITION := true
 PLATFORM_SECURITY_PATCH := 2099-12-31
-PLATFORM_VERSION := 15
+PLATFORM_VERSION := 16
+PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
 TW_PREPARE_DATA_MEDIA_EARLY := true
 
-# MinUI Display Configuration (1920x1200 WUXGA Landscape)
-TW_THEME := landscape_hdpi
-TW_SCREEN_WIDTH := 1920
-TW_SCREEN_HEIGHT := 1200
+# Display & MinUI UI Configuration (1200x1920 WUXGA Portrait)
+TW_THEME := portrait_hdpi
+TW_SCREEN_WIDTH := 1200
+TW_SCREEN_HEIGHT := 1920
+DEVICE_SCREEN_WIDTH := 1200
+DEVICE_SCREEN_HEIGHT := 1920
+OF_SCREEN_W := 1200
+OF_SCREEN_H := 1920
+OF_STATUS_H := 80
+OF_STATUS_INDENT_LEFT := 48
+OF_STATUS_INDENT_RIGHT := 48
+OF_HIDE_NOTCH := 1
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 RECOVERY_GRAPHICS_FORCE_USE_LINELENGTH := true
 TW_NO_SCREEN_BLANK := true
@@ -112,14 +146,29 @@ TW_NO_BATT_PERCENT := false
 TW_BATTERY_SYSFS_PATH := "/sys/class/power_supply/battery"
 TW_CUSTOM_BATTERY_PATH := "/sys/class/power_supply/battery"
 
-# Storage Configuration & Mounts
+# Storage, OTG & MTP Configuration
 TW_HAS_MTP := true
+TW_MTP_DEVICE := "/dev/mtp_usb"
+TW_USB_STORAGE := true
+TW_HAS_USB_STORAGE := true
 TW_USE_TOOLBOX := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
 TW_INTERNAL_STORAGE_PATH := "/data/media/0"
 TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
 TW_EXTERNAL_STORAGE_PATH := "/external_sd"
 TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
+
+# Terminal Emulator, Sideload, Tools & Fastbootd
+TW_INCLUDE_INCLUDED_TERMINAL := true
+TW_INCLUDE_TERMINAL := true
+FOX_ASH_IS_BASH := 1
+OF_ENABLE_CONSOLE := 1
+TW_INCLUDE_FASTBOOTD := true
+TW_INCLUDE_REPACKTOOLS := true
+TW_INCLUDE_LIBRESETPROP := true
+TW_INCLUDE_RESETPROP := true
+TW_SLOT_SWITCH := true
+TW_BACKUP_DEVICE_BOOT := true
 
 # Recovery Device Directory Inclusion
 TARGET_RECOVERY_DEVICE_DIRS += device/lenovo/TB311FU

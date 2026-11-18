@@ -22,9 +22,10 @@ ro.fastbootd.available=true
 
 # USB Controller & Insecure ADB in Recovery
 ro.adb.secure=0
-sys.usb.controller=11200000.usb0
+sys.usb.controller=musb-hdrc
 
 # Cryptography & FBE v2 File Encryption Modes
 ro.crypto.volume.filenames_mode=aes-256-cts
 ro.crypto.allow_encrypt_override=true
-ro.crypto.volume.metadata.encryption=aes-256-xts:wrappedkey_v0
+ro.crypto.volume.metadata.encryption=aes-256-xts
+ro.crypto.state=unsupported

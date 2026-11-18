@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 kernel_recovery/verify_avb_chain.py - Cryptographic Verification for MediaTek Chained Boot Images & AVB Chain
-Lenovo Tab M11 (TB311FU / poplar, MediaTek Helio G88 / MT8786 / MT6768)
+Lenovo Tab with Clear Case (TB311FU / poplar, MediaTek Helio G88 / MT8786 / MT6768)
 
 Verifies that Android boot images strictly satisfy Little Kernel (LK) Android Verified Boot (AVB) 2.0
 chained partition invariants and stock hash descriptor pinning:

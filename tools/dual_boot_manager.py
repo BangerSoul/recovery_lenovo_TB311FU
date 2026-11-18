@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 kernel_recovery/dual_boot_manager.py - Dual-Boot Manager & Recovery Staging CLI
-Lenovo Tab M11 (TB311FU / poplar, MediaTek Helio G88 / MT8786 / MT6768)
+Lenovo Tab with Clear Case (TB311FU / poplar, MediaTek Helio G88 / MT8786 / MT6768)
 
 Manages and verifies dual-boot slot transitions, cryptographic boot image integrity,
 and Bootloader Control Block (BCB) recovery staging without causing the Little Kernel
@@ -398,7 +398,7 @@ class DeviceTransport:
 class DualBootManager:
     """
     Coordinates dual-boot slot transitions, cryptographic image verification,
-    and BCB staging for Lenovo Tab M11 (TB311FU).
+    and BCB staging for Lenovo Tab with Clear Case (TB311FU).
     """
 
     def __init__(self, serial: str = SERIAL_NUMBER, mock: bool = False, dry_run: bool = False):
@@ -933,7 +933,7 @@ class DualBootManager:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Dual-Boot Manager & Recovery Staging CLI for Lenovo Tab M11 (TB311FU)"
+        description="Dual-Boot Manager & Recovery Staging CLI for Lenovo Tab with Clear Case (TB311FU)"
     )
     parser.add_argument(
         "command",
@@ -974,7 +974,7 @@ def main():
     if args.command == "status":
         st = mgr.get_status()
         print("\n" + "=" * 70)
-        print(" Lenovo Tab M11 (TB311FU) Dual-Boot Manager - Status Report")
+        print(" Lenovo Tab with Clear Case (TB311FU) Dual-Boot Manager - Status Report")
         print("=" * 70)
         print(f"Device Serial:       {st['serial']}")
         print(f"Connection Mode:     {st['mode'].upper()}")

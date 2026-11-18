@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Deploy TWRP Recovery Vector to Secondary Slot (boot_b) on Lenovo Tab M11 (TB311FU).
+    Deploy TWRP Recovery Vector to Secondary Slot (boot_b) on Lenovo Tab with Clear Case (TB311FU).
 .DESCRIPTION
     Flashes 32MB chained recovery_boot.img vector directly to boot_b, keeping boot_a (OS)
     and factory vendor_boot 100% untouched to preserve stock cryptographic integrity.

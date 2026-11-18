@@ -2,7 +2,7 @@
 """
 kernel_recovery/test_kernel_recovery.py - Comprehensive Unit & Integration Tests
 Milestone 3: Custom Kernel, Recovery Vector & Alternative OS Porting
-Lenovo Tab M11 (TB311FU / poplar, MT8786 / MT6768)
+Lenovo Tab with Clear Case (TB311FU / poplar, MT8786 / MT6768)
 
 Tests:
 1. AVB 2.0 chained boot verification (valid and corrupted images).

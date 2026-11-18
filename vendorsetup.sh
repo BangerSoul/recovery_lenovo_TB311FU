@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# OrangeFox build environment variables for Lenovo Tab M11 (TB311FU / poplar)
+# OrangeFox build environment variables for Lenovo Tab with Clear Case (TB311FU / poplar)
 export FOX_BUILD_DEVICE="TB311FU"
 export FOX_VERSION="R12.1"
 export OF_MAINTAINER="BangerSoul"

@@ -16,7 +16,7 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
 PRODUCT_DEVICE := TB311FU
 PRODUCT_NAME := twrp_TB311FU
 PRODUCT_BRAND := Lenovo
-PRODUCT_MODEL := Lenovo Tab M11
+PRODUCT_MODEL := Lenovo Tab with Clear Case (TB311FU)
 PRODUCT_MANUFACTURER := Lenovo
 
 PRODUCT_PACKAGES += \

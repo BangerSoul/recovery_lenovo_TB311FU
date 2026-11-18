@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Non-destructive slot switch into Main OS on slot A for Lenovo Tab M11 (TB311FU).
+    Non-destructive slot switch into Main OS on slot A for Lenovo Tab with Clear Case (TB311FU).
 #>
 [CmdletBinding()]
 param(

@@ -1,9 +1,9 @@
-# Recovery System Properties for Lenovo Tab M11 (TB311FU / poplar)
+# Recovery System Properties for Lenovo Tab with Clear Case (TB311FU / poplar)
 # Platform: MediaTek Helio G88 / MT6769 (MT8786, tb8786p1_64_k66)
 
 # Device & Product Identification
 ro.product.device=TB311FU
-ro.product.model=Lenovo Tab M11
+ro.product.model=Lenovo Tab with Clear Case (TB311FU)
 ro.product.name=TB311FU
 ro.build.product=TB311FU
 ro.product.board=tb8786p1_64_k66
@@ -22,7 +22,7 @@ ro.fastbootd.available=true
 
 # USB Controller & Insecure ADB in Recovery
 ro.adb.secure=0
-sys.usb.controller=musb-hdrc
+sys.usb.controller=11200000.usb0
 
 # Cryptography & FBE v2 File Encryption Modes
 ro.crypto.volume.filenames_mode=aes-256-cts

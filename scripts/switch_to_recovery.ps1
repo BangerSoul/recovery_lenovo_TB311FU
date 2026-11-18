@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Non-destructive slot switch into TWRP Recovery on slot B for Lenovo Tab M11 (TB311FU).
+    Non-destructive slot switch into TWRP Recovery on slot B for Lenovo Tab with Clear Case (TB311FU).
 #>
 [CmdletBinding()]
 param(

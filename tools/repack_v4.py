@@ -35,7 +35,7 @@ def repack(output_path, platform_path, recovery_path, dtb_path, cmdline="bootopt
     page_size = 4096
     kernel_addr = 0x40080000
     ramdisk_addr = 0x47c80000
-    dtb_addr = 0x41f78000
+    dtb_addr = 0x4bc80000
     tags_addr = 0x4bc80000
 
     combined_ramdisk = plat_data + rec_data

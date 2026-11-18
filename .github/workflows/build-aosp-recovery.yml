@@ -98,6 +98,11 @@ jobs:
           cd "$GITHUB_WORKSPACE/recovery_workspace"
           export ALLOW_MISSING_DEPENDENCIES=true
           export LC_ALL="C"
+          export TW_THEME="portrait_hdpi"
+          export TARGET_SCREEN_WIDTH=1200
+          export TARGET_SCREEN_HEIGHT=1920
+          export DEVICE_SCREEN_WIDTH=1200
+          export DEVICE_SCREEN_HEIGHT=1920
           source build/envsetup.sh
 
           TYPE="${{ inputs.BUILD_TYPE || 'eng' }}"

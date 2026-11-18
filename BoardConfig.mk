@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2026 The Android Open Source Project
-# Copyright (C) 2026 TeamWin Recovery Project
+# Copyright (C) 2026 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 # Device Path & Identification
 DEVICE_PATH := device/lenovo/TB311FU
-TW_DEVICE_VERSION := 12.1-BangerSoul
 
 # Target Architecture
 TARGET_ARCH := arm64
@@ -82,66 +81,12 @@ AB_OTA_PARTITIONS += \
 # Recovery FSTAB Configuration
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# Fastbootd Userspace Dynamic Partition Flashing
-TW_INCLUDE_FASTBOOTD := true
-
-# Cryptography & File-Based Encryption (FBE v2)
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_CRYPTO_FBE := true
-TW_INCLUDE_FBE_METADATA_DECRYPT := true
+# AOSP Standard Recovery UI & Security
+TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 BOARD_USES_METADATA_PARTITION := true
 PLATFORM_SECURITY_PATCH := 2099-12-31
 PLATFORM_VERSION := 16
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
-TW_PREPARE_DATA_MEDIA_EARLY := true
-
-# Filesystems
-TW_INCLUDE_NTFS_3G := true
-TW_INCLUDE_EXFAT := true
-
-# MinUI Display Configuration (1200x1920 WUXGA Portrait)
-TW_THEME := portrait_hdpi
-TW_SCREEN_WIDTH := 1200
-TW_SCREEN_HEIGHT := 1920
-TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
-RECOVERY_GRAPHICS_FORCE_USE_LINELENGTH := true
-TW_NO_SCREEN_BLANK := true
-
-# Backlight & Brightness Mapping (11-bit PWM, 0 to 2047)
-TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
-TW_MAX_BRIGHTNESS := 2047
-TW_DEFAULT_BRIGHTNESS := 1200
-
-# Touchscreen Digitizer & Input Calibration
-TW_ROTATION := 0
-TW_SUPPORT_INPUT_1_2_HACK := true
-TW_INPUT_BLACKLIST := "hbtp_vm"
-
-# Battery & Fuel Gauge Monitoring (MT6358 PMIC / SGM41512 Charger)
-TW_NO_BATT_PERCENT := false
-TW_BATTERY_SYSFS_PATH := "/sys/class/power_supply/battery"
-TW_CUSTOM_BATTERY_PATH := "/sys/class/power_supply/battery"
-
-# Storage, OTG & MTP Configuration
-TW_HAS_MTP := true
-TW_MTP_DEVICE := "/dev/mtp_usb"
-TW_USB_STORAGE := true
-TW_HAS_USB_STORAGE := true
-TW_USE_TOOLBOX := true
-TW_EXCLUDE_DEFAULT_USB_INIT := true
-TW_INTERNAL_STORAGE_PATH := "/data/media/0"
-TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
-TW_EXTERNAL_STORAGE_PATH := "/external_sd"
-TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
-
-# Terminal, Tools, Slot Switching & Backup
-TW_INCLUDE_INCLUDED_TERMINAL := true
-TW_INCLUDE_TERMINAL := true
-TW_INCLUDE_REPACKTOOLS := true
-TW_INCLUDE_LIBRESETPROP := true
-TW_INCLUDE_RESETPROP := true
-TW_SLOT_SWITCH := true
-TW_BACKUP_DEVICE_BOOT := true
 
 # Recovery Device Directory Inclusion
 TARGET_RECOVERY_DEVICE_DIRS += device/lenovo/TB311FU

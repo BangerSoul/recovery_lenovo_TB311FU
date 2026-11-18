@@ -25,7 +25,13 @@ The complete open-source software stack for the **Lenovo Tab with Clear Case** (
 
 ---
 
-## Architecture: Secondary Slot Recovery Vector (`boot_b`)
+## Branches
+
+- **`arrow-14.0`**: ArrowOS 14.0 (Android 14) AOSP-compatible recovery configuration and lunch targets.
+- **`aosp`**: AOSP / ROM build-compatible recovery configuration.
+- **`main`**: Master branch containing the production dual-boot recovery deployment suite.
+- **`orangefox` / `feature/orangefox-mt8786`**: Dedicated OrangeFox R12.1 recovery branch.
+- **`twrp`**: Standalone TWRP 3.7+ branch.
 
 In standard MediaTek GKI 2.0 architectures, flashing TWRP to `vendor_boot` breaks Little Kernel (LK) RSA4096 signature verification, causing immediate 2-second Orange State reboot loops and requiring full factory re-flashing.
 

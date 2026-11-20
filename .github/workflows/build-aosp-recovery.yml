@@ -223,7 +223,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/aosp'
         with:
           tag_name: release-${{ steps.package.outputs.TIMESTAMP }}
-          name: "AOSP / LineageOS Recovery for Lenovo Tab M11 (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
+          name: "AOSP / LineageOS Recovery for Lenovo Tab with Clear Case (TB311FU) - ${{ steps.package.outputs.TIMESTAMP }}"
           draft: false
           prerelease: false
           files: |

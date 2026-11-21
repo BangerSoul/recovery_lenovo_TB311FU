@@ -75,8 +75,15 @@ AB_OTA_PARTITIONS += \
     system \
     vendor \
     product \
-    system_ext \
-    odm
+    system_ext
+
+# Android Verified Boot (AVB 2.0)
+BOARD_AVB_ENABLE := true
+BOARD_AVB_ALGORITHM := SHA256_RSA2048
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+BOARD_AVB_VENDOR_BOOT_ADD_HASH_FOOTER_ARGS += --salt 5db37c8e2388c9788a77775fcf84c5acc26ee2bb5166a785cfa92909f7fb7bc5
+BOARD_AVB_DTBO_ADD_HASH_FOOTER_ARGS += --salt 5db37c8e2388c9788a77775fcf84c5acc26ee2bb5166a785cfa92909f7fb7bc5
+BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
 
 # Recovery FSTAB Configuration
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab

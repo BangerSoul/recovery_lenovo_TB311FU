@@ -57,17 +57,16 @@ BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
 BOARD_MKBOOTIMG_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION) --base $(BOARD_KERNEL_BASE) --kernel_offset $(BOARD_KERNEL_OFFSET) --ramdisk_offset $(BOARD_RAMDISK_OFFSET) --dtb_offset $(BOARD_DTB_OFFSET) --tags_offset $(BOARD_TAGS_OFFSET) --pagesize $(BOARD_PAGE_SIZE)
 
-# Dynamic Super Partition Geometry (9.00 GiB / 9,663,676,416 bytes)
-BOARD_SUPER_PARTITION_SIZE := 9663676416
-BOARD_SUPER_PARTITION_GROUPS := mtk_dynamic_partitions
-BOARD_MTK_DYNAMIC_PARTITIONS_SIZE := 9659482112
-BOARD_MTK_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product system_ext odm vendor_dlkm odm_dlkm system_dlkm
+# Dynamic Super Partition Geometry (11.00 GiB / 11,811,160,064 bytes)
+BOARD_SUPER_PARTITION_SIZE := 11811160064
+BOARD_SUPER_PARTITION_GROUPS := main
+BOARD_MAIN_SIZE := 11809062912
+BOARD_MAIN_PARTITION_LIST := system vendor product system_ext
 
 # Virtual A/B Slot Architecture
 AB_OTA_UPDATER := true
 AB_OTA_PARTITIONS += \
     boot \
-    init_boot \
     vendor_boot \
     dtbo \
     vbmeta \
@@ -76,8 +75,15 @@ AB_OTA_PARTITIONS += \
     system \
     vendor \
     product \
-    system_ext \
-    odm
+    system_ext
+
+# Android Verified Boot (AVB 2.0)
+BOARD_AVB_ENABLE := true
+BOARD_AVB_ALGORITHM := SHA256_RSA2048
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+BOARD_AVB_VENDOR_BOOT_ADD_HASH_FOOTER_ARGS += --salt 5db37c8e2388c9788a77775fcf84c5acc26ee2bb5166a785cfa92909f7fb7bc5
+BOARD_AVB_DTBO_ADD_HASH_FOOTER_ARGS += --salt 5db37c8e2388c9788a77775fcf84c5acc26ee2bb5166a785cfa92909f7fb7bc5
+BOARD_MOVE_GSI_AVB_KEYS_TO_VENDOR_BOOT := true
 
 # Recovery FSTAB Configuration
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab

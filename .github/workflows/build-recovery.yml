@@ -5,6 +5,8 @@ on:
     branches:
       - feature/orangefox-mt8786
       - main
+      - twrp
+      - orangefox
     tags:
       - 'v*'
       - 'release-*'
@@ -89,7 +91,14 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/recovery_workspace"
           cd "$GITHUB_WORKSPACE/recovery_workspace"
 
-          FLAVOR="${{ inputs.RECOVERY_FLAVOR || 'OrangeFox' }}"
+          FLAVOR="${{ inputs.RECOVERY_FLAVOR }}"
+          if [ -z "$FLAVOR" ]; then
+            if [ "${{ github.ref_name }}" = "twrp" ]; then
+              FLAVOR="TWRP"
+            else
+              FLAVOR="OrangeFox"
+            fi
+          fi
           BRANCH="${{ inputs.MANIFEST_BRANCH || '12.1' }}"
 
           if [ "$FLAVOR" = "OrangeFox" ]; then
